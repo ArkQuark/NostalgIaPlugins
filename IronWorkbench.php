@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=1.05
+version=1.06
 author=DartMiner43
 class=Iron
 apiversion=10,11,12
@@ -57,13 +57,14 @@ class Iron implements Plugin{
 					break;
 				}
 				elseif(($target->getID() == 42) and ($itemheld->getID() == 259)) {
-					$player->addItem (51,0,4);  //Зажигалка->Огонь
+					$player->addItem (51,0,4);  //Зажигалка->4Огоня
 					$player->removeItem(259,0,1);
 					break;
 				}
 				elseif(($target->getID() == 42) and ($itemheld->getID() == 6) and ($itemheld->count >=16)) {
-					$player->addItem (3,0,1);  //16 Саженцев->Земля
-					$player->removeItem(6,0,16);
+					$metadata = $itemheld->getMetadata();
+					$player->addItem (2,0,1);  //16 Саженцев->Блок травы
+					$player->removeItem(6,$metadata,16);
 					break;
 				}
 				
