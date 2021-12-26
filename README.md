@@ -1,10 +1,10 @@
 # NostalgiaPlugins
-Plugins for NostalgiaCore/PMMP 1.3.11
+Plugins for NostalgiaCore/PMMP 1.3.11<br>
 Special thx to SkilasticYT
 
 ColorCarpet:
 
-Author: ArkQuark.<br>
+Author: ArkQuark<br>
 Description: Paints blocks of wool and carpets with a dye in your hands/n
 
 GrassPlant:
