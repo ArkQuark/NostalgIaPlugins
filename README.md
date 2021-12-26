@@ -7,8 +7,8 @@ Author: ArkQuark.
 Description: Paints blocks of wool and carpets with a dye in your hands
 
 GrassPlant:
-
 Author: onlypuppy7
+
 Description: Replaces dirt block to grass block if you click on him with a wheat seed
 
 IronWorkbench:
