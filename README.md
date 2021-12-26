@@ -13,7 +13,7 @@ Description: Replaces dirt block to grass block if you click on him with a wheat
 
 IronWorkbench:
 
-!This version of plugin (1.05) is buggy!
+!This version of plugin (1.06) is buggy!
 
 Author: DartMiner43<br>
 Description: New workbench (iron block)!<br>
