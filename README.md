@@ -24,4 +24,4 @@ Flint -> Gunpowder<br>
 Quartz -> Bone<br>
 Grass(not block) -> Dead bush<br>
 Flint and steel -> 4 Fire blocks<br>
-16 saplings -> Dirt
+16 saplings -> Grass block
