@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=ColorCarpet
 description=Click on carpet with dye and his now dyed
-version=1.01
+version=1.02
 author=ArkQuark
 class=Carpet
 apiversion=11
@@ -12,6 +12,8 @@ apiversion=11
 
 class Carpet implements Plugin{
 	private $api;
+
+	//Special thx to SkilasticYT
 
 public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
@@ -21,9 +23,9 @@ public function init(){
 		$this->api->addHandler("player.block.touch", array($this, "eventHandle"), 50);
 	}
 	
-	public function getColor($itemheld){
+	public function getColor($item){
 		
-		$color = $itemheld->getMetadata();
+		$color = $item->getMetadata();
 		
 				switch($color){
 					case 0:
@@ -61,7 +63,7 @@ public function init(){
 				}
 	}	
 
-public function eventHandle($data, $event){
+	public function eventHandle($data, $event){
 
 		switch ($event){
 
@@ -70,33 +72,30 @@ public function eventHandle($data, $event){
 				$player = $data["player"];
 				$target = $data["target"];
 				$pos = new Vector3($target->x,$target->y,$target->z);
-				$itemheld = $player->getSlot($player->slot);
-				$color = $this->getColor($itemheld);
-				$dyeColor = $itemheld->getMetadata();
+				$item = $player->getSlot($player->slot);
+				$color = $this->getColor($item);
+				$dyeColor = $item->getMetadata();
 			
-			if(($target->getID() == 35) and ($itemheld->getID() == 351)) {
-					
-					if ($itemheld->getID() == 351) {
-						$block = BlockAPI::get(35, $color);
-				        $target->level->setBlock($pos, $block); 
-						$player->removeItem(351, $dyeColor , 1);
-					}
-					
+			if(($target->getID() == 35) and ($item->getID() == 351)) {
+				
+				$block = BlockAPI::get(35, $color);
+				$target->level->setBlock($pos, $block); 
+				$player->removeItem(351, $dyeColor , 1);
+				
 			}
-			elseif(($target->getID() == 171) and ($itemheld->getID() == 351)) {
+			elseif(($target->getID() == 171) and ($item->getID() == 351)) {
 					
-					if ($itemheld->getID() == 351) {
-						$metadata = $itemheld->getMetadata();
-						$block = BlockAPI::get(171, $color);
-				        $target->level->setBlock($pos, $block); 
-						$player->removeItem(351, $dyeColor, 1);
-				    }
-				}
-		}
-}
+				$metadata = $item->getMetadata();
+				$block = BlockAPI::get(171, $color);
+				$target->level->setBlock($pos, $block); 
+				$player->removeItem(351, $dyeColor, 1);
 
-public function __destruct()
-{
-}
+			}
+		}
+	}
+
+	public function __destruct(){
+	}
+	
 }
 ?>

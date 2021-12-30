@@ -4,10 +4,10 @@
 __PocketMine Plugin__
 name=GrassPlant
 description=Replant grass using wheat seeds.
-version=1.11
+version=1.2
 author=onlypuppy7
 class=Grass
-apiversion=11,12
+apiversion=11
 */
 
 class Grass implements Plugin
@@ -27,7 +27,6 @@ class Grass implements Plugin
 	}
 
 
-
 	public function eventHandle($data, $event) {
 
 		switch ($event) {
@@ -38,13 +37,14 @@ class Grass implements Plugin
 				$target = $data["target"];
 				$tile = $this->api->tile->get(new Position($target->x, $target->y, $target->z, $target->level));
 				$itemheld = $player->getSlot($player->slot);
+				$item = $itemheld->getID();
 
 
-				if(($target->getID() == 3) and ($itemheld->getID() == 295)){
+				if(($target->getID() == 3) and (($item == 295) or ($item == 361) or ($item == 362) or ($item == 458))){
 					$block = BlockAPI::get(2, 0);
 					$pos = new Vector3($target->x,$target->y,$target->z);
 					$target->level->setBlock($pos, $block);
-					$player->removeItem(295,0,1);
+					$player->removeItem($item, 0, 1);
 				}
 				break;
 		}
