@@ -14,7 +14,7 @@ Description: Replaces dirt block to grass block if you click on him with a wheat
 
 IronWorkbench:<br>
 
-!This version of plugin (1.1) is buggy!<br>
+!This version of plugin (1.1) is buggy!
 
 Author: DartMiner43<br>
 Description: New workbench (iron block)!<br>
@@ -29,6 +29,6 @@ Coal(or Charcoal) -> Ink sac
 
 QuartzDrop:<br>
 
-Author:ArkQuark<br>
+Author: ArkQuark<br>
 Description: Drops quartz from sand and netherrack
 
