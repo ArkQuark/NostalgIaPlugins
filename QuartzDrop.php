@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=QuartzDrop
 description=Quartz now drops from sand and netherrack.
-version=1.01
+version=1.02
 author=ArkQuark
 class=Quartz
 apiversion=11
@@ -33,7 +33,7 @@ class Quartz implements Plugin{
 			$item = $this->api->block->fromString("QUARTZ");
 			$pos = new Position($block->x+.5, $block->y, $block->z+.5, $level);
 			
-			if($block->getID() == (12 or 87)){
+			if(($block->getID() == 12) or ($block->getID() == 87)){
 				if ($random == 1){
 					$this->api->entity->drop($pos, $item);
 				}
