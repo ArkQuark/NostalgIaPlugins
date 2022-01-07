@@ -2,9 +2,9 @@
 
 /*
 __PocketMine Plugin__
-name=QuartzDrop
-description=Quartz now drops from sand and netherrack.
-version=1.02
+name=DropsPlugin
+description=New drops from blocks
+version=1.1
 author=ArkQuark
 class=Quartz
 apiversion=11
@@ -26,15 +26,21 @@ class Quartz implements Plugin{
 
 			case "player.block.break":
 			
-			$random = mt_rand(1, 20);
 			$block = $data["target"];
 			$player = $data["player"];
 			$level = $block->level;
-			$item = $this->api->block->fromString("QUARTZ");
 			$pos = new Position($block->x+.5, $block->y, $block->z+.5, $level);
 			
-			if(($block->getID() == 12) or ($block->getID() == 87)){
-				if ($random == 1){
+			if(($block->getID() == 12) or ($block->getID() == 87)){//Sand and Netherrack
+				if (mt_rand(1, 20) == 1){
+					$item = $this->api->block->fromString("QUARTZ");
+					$this->api->entity->drop($pos, $item);
+				}
+			}
+				
+			elseif(($block->getID() == 18)){//Leaves
+				if (mt_rand(1, 10) == 1){
+					$item = $this->api->block->fromString("STRING");
 					$this->api->entity->drop($pos, $item);
 				}
 				

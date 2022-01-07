@@ -3,7 +3,7 @@
 /*
 __PocketMine Plugin__
 name=GrassPlant
-description=Replant grass using wheat seeds.
+description=Replant grass using any seeds.
 version=1.2
 author=onlypuppy7
 class=Grass

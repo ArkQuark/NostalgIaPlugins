@@ -2,7 +2,7 @@
 Plugins for NostalgiaCore/PMMP 1.3.11<br>
 Special thx to SkilasticYT
 
-ColorCarpet:
+ColorCarpet:<br>
 
 Author: ArkQuark<br>
 Description: Paints blocks of wool and carpets with a dye in your hands
@@ -10,7 +10,7 @@ Description: Paints blocks of wool and carpets with a dye in your hands
 GrassPlant:<br>
 
 Author: onlypuppy7<br>
-Description: Replaces dirt block to grass block if you click on him with a wheat seed
+Description: Replaces dirt block to grass block if you click on him with an any seed
 
 IronWorkbench:<br>
 
@@ -27,8 +27,12 @@ Flint and steel -> 4 Fire blocks<br>
 8 saplings -> Grass block<br>
 Coal(or Charcoal) -> Ink sac
 
-QuartzDrop:<br>
+DropsPlugin(old QuartzDrop):<br>
 
 Author: ArkQuark<br>
-Description: Drops quartz from sand and netherrack
+Description: New drops from blocks<br>
+Drops:<br>
+Quartz(5%) from Sand and Netherrack<br>
+String(10%) from Leaves
+
 
