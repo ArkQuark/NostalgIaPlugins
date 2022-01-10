@@ -4,10 +4,10 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=1.12
+version=1.13
 author=DartMiner43
 class=Iron
-apiversion=11
+apiversion=11,12
 */
 
 class Iron implements Plugin{

@@ -4,10 +4,10 @@
 __PocketMine Plugin__
 name=DropsPlugin
 description=New drops from blocks
-version=1.1
+version=1.11
 author=ArkQuark
 class=Quartz
-apiversion=11
+apiversion=11,12
 */
 
 class Quartz implements Plugin{

@@ -4,10 +4,10 @@
 __PocketMine Plugin__
 name=ColorCarpet
 description=Click on carpet with dye and his now dyed
-version=1.02
+version=1.03
 author=ArkQuark
 class=Carpet
-apiversion=11
+apiversion=11,12
 */
 
 class Carpet implements Plugin{

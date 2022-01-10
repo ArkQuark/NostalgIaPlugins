@@ -4,21 +4,19 @@
 __PocketMine Plugin__
 name=GrassPlant
 description=Replant grass using wheat seeds.
-version=1.3
+version=1.31
 author=onlypuppy7
 class=Grass
-apiversion=11
+apiversion=11,12
 */
 
 class Grass implements Plugin
 {
 	private $api;
-	private $openGrass;
 
 	public function __construct(ServerAPI $api, $server = false)
 	{
 		$this->api = $api;
-		$this->openGrass = array();
 	}
 
 	public function init()
