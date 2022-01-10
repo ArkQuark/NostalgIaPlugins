@@ -1,5 +1,5 @@
 # NostalgiaPlugins
-Plugins for NostalgiaCore/PMMP 1.3.11<br>
+Plugins for NostalgiaCore/PMMP 1.3.12<br>
 Special thx to SkilasticYT
 
 ColorCarpet:<br>
