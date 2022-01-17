@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=DropsPlugin
 description=New drops from blocks
-version=1.11
+version=1.2
 author=ArkQuark
 class=Quartz
 apiversion=11,12
@@ -33,8 +33,10 @@ class Quartz implements Plugin{
 			
 			if(($block->getID() == 12) or ($block->getID() == 87)){//Sand and Netherrack
 				if (mt_rand(1, 20) == 1){
+					$level->setBlock(new Vector3($block->x, $block->y, $block->z), new AirBlock());
 					$item = $this->api->block->fromString("QUARTZ");
 					$this->api->entity->drop($pos, $item);
+					return false;
 				}
 			}
 				
@@ -43,7 +45,6 @@ class Quartz implements Plugin{
 					$item = $this->api->block->fromString("STRING");
 					$this->api->entity->drop($pos, $item);
 				}
-				
 			}
 			
 		}
