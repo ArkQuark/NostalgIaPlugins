@@ -1,22 +1,22 @@
 # NostalgiaPlugins
-Plugins for NostalgiaCore/PMMP 1.3.11<br>
+Plugins for NostalgiaCore/PMMP 1.3.12<br>
 Special thx to SkilasticYT
 
 ColorCarpet:<br>
 
-Author: ArkQuark<br>
+Original Author: ArkQuark<br>
 Description: Paints blocks of wool and carpets with a dye in your hands
 
 GrassPlant:<br>
 
-Author: onlypuppy7<br>
+Original Author: onlypuppy7<br>
 Description: Replaces dirt block to grass block if you click on him with an any seed
 
 IronWorkbench:<br>
 
-!This version of plugin (1.12) is buggy!
+!This version of plugin (1.13) is buggy!
 
-Author: DartMiner43<br>
+Original Author: DartMiner43<br>
 Description: New workbench (iron block)!<br>
 Crafts:<br>
 Jungle wood -> Jungle planks<br>
@@ -29,10 +29,13 @@ Coal(or Charcoal) -> Ink sac
 
 DropsPlugin(old QuartzDrop):<br>
 
-Author: ArkQuark<br>
+Original Author: ArkQuark<br>
 Description: New drops from blocks<br>
 Drops:<br>
 Quartz(5%) from Sand and Netherrack<br>
 String(10%) from Leaves
 
+mobTest:<br>
 
+Original Author: zhuowei<br>
+Descriprion: New spawn system for mobs!
