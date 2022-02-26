@@ -54,8 +54,6 @@ apiversion=12
 		if(($this->api->time->get() >= 0) and ($this->api->time->get() <= 9500)) {
 			
 		if(count($this->api->player->online()) > 0){
-			
-			console("day");
 		
 		//$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
 		//$npcplayer->spawned = true;
@@ -113,7 +111,6 @@ apiversion=12
     if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)) {
 		
 		if(count($this->api->player->online()) > 0){
-		console("night");
 		
         for ($i = 0; $i <= ((count($this->api->player->online()))*2); $i++) {
 			
