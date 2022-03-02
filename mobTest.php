@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.0
+version=2.1
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -26,6 +26,7 @@ apiversion=12
 	1.7.1: Fixed spawn time for mobs
 	
 	2.0: (World Update!)Added Zombie Pigman and mobs now spawn in world where located player(work if server has >1 players)
+	2.1: (ClearMob Update)Mobs will disappear every 15 minutes
 	
 	*/
 
@@ -34,6 +35,7 @@ apiversion=12
     private $api, $config;
 
     public function __construct(ServerAPI $api, $server = false){
+		$this->server = ServerAPI::request();
 		$this->api = $api;
       //$this->npclist = array();
     }
@@ -44,10 +46,13 @@ apiversion=12
 		"//in minutes",
 		"dayMobsTime" => 3,
 		"nightMobsTime" => 3,
+		"clearMob" => true,
+		"clearTime" => 15,
 	));
 	
     $this->api->schedule($this->config->get("dayMobsTime")*60*20, array($this,"spawnDayMobs"), array(), true); //change to set mob spawn delay in ticks (minutes*seconds*20)
     $this->api->schedule($this->config->get("nightMobsTime")*60*20, array($this,"spawnNightMobs"), array(), true); 
+	$this->api->schedule($this->config->get("clearTime")*60*20, array($this, "mobClear"), array(), true);
 	 
     }
 
@@ -68,7 +73,7 @@ apiversion=12
 		}
 		else{
 			
-			//console("not in nether");
+		//console("not in nether");
         $type = mt_rand(10, 13);
 		$hp = array(
 				10 => 4,
@@ -143,7 +148,7 @@ apiversion=12
 			}
 			else{
 			
-				//console("not in nether");
+			//console("not in nether");
             $type = mt_rand(32,35);
 			$hp = array(
 				32 => 20,
@@ -204,10 +209,30 @@ apiversion=12
       }
     } */
 
+public function mobClear(){
+	if($this->config->get("dayMobsTime") == true){
+		if((count($this->api->player->online())) > 0 ){
+			$cnt = 0;
+			$l = $this->server->query("SELECT EID FROM entities WHERE class = ".ENTITY_MOB.";");
+			if($l !== false and $l !== true){
+				while(($e = $l->fetchArray(SQLITE3_ASSOC)) !== false){
+				$e = $this->api->entity->get($e["EID"]);
+				if($e instanceof Entity){
+					$this->api->entity->remove($e->eid);
+					$cnt++;
+				}
+				}
+			}
+		}
+	}
+	//console("Mob cleared");
+	return;
+}
+    
 
     public function __destruct(){
     }
 
-  }
+}
 
   //Rising, 18000, midday is 4500, midnight is around 15000, decline, I think is the evening? I think that is 10000 (zhuowei)
