@@ -4,14 +4,14 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=1.7.1
+version=2.0
 author=zhuowei
 class=MobTest
 apiversion=12
 */
 
 	/*
-	Small Changelog
+	Not Small Changelog
 	===============
 	
 	1.0: Initial release
@@ -25,15 +25,16 @@ apiversion=12
 	1.7: If server has 0 player this plugins don't spawn mobs
 	1.7.1: Fixed spawn time for mobs
 	
+	2.0: (World Update!)Added Zombie Pigman and mobs now spawn in world where located player(work if server has >1 players)
+	
 	*/
-
 
   class MobTest implements Plugin{
 
     private $api, $config;
 
     public function __construct(ServerAPI $api, $server = false){
-      $this->api = $api;
+		$this->api = $api;
       //$this->npclist = array();
     }
 
@@ -51,15 +52,23 @@ apiversion=12
     }
 
     public function spawnDayMobs(){
-		if(($this->api->time->get() >= 0) and ($this->api->time->get() <= 9500)) {
-			
-		if(count($this->api->player->online()) > 0){
 		
+		if(($this->api->time->get() >= 0) and ($this->api->time->get() <= 9500)) {
+			$o = $this->api->player->online();
+			
 		//$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
 		//$npcplayer->spawned = true;
-
-    for ($i = 0; $i <= count($this->api->player->online()); $i++) {
+	if(count($o) > 0){
 		
+		$rand_p = mt_rand(0, (count($o) - 1));
+		$world = $this->api->player->get($o[$rand_p])->level;
+		
+		if(($world->getName() == "Nether") or ($world->getName() == "nether")){
+			return;
+		}
+		else{
+			
+			//console("not in nether");
         $type = mt_rand(10, 13);
 		$hp = array(
 				10 => 4,
@@ -70,7 +79,7 @@ apiversion=12
         $randomAreaX = mt_rand(5,250);
         $randomAreaZ = mt_rand(5,250);
 		
-        $entityit = $this->api->entity->add($this->api->level->getDefault(), ENTITY_MOB, $type, array(
+        $entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
             "x" => $randomAreaX,
             "y" => 80,
             "z"  => $randomAreaZ,
@@ -78,8 +87,8 @@ apiversion=12
 			"Color" => mt_rand(0,15),
         ));
 		
-        $this->api->entity->spawnToAll($entityit, $this->api->level->getDefault());
-        $entityit2 = $this->api->entity->add($this->api->level->getDefault(), ENTITY_MOB, $type, array(
+        $this->api->entity->spawnToAll($entityit, $world);
+        $entityit2 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
             "x" => $randomAreaX + mt_rand(1,3),
             "y"  => 80,
             "z" => $randomAreaZ - mt_rand(1,3),
@@ -87,8 +96,8 @@ apiversion=12
 			"Color" => mt_rand(0,15),
         ));
 		
-        $this->api->entity->spawnToAll($entityit2, $this->api->level->getDefault());
-        $entityit3 = $this->api->entity->add($this->api->level->getDefault(), ENTITY_MOB, $type, array(
+        $this->api->entity->spawnToAll($entityit2, $world);
+        $entityit3 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
             "x" => $randomAreaX - mt_rand(1,3),
             "y" => 80,
             "z" => $randomAreaZ - mt_rand(1,3),
@@ -96,11 +105,13 @@ apiversion=12
 			"Color" => mt_rand(0,15),
         ));
 		
-        $this->api->entity->spawnToAll($entityit3, $this->api->level->getDefault());
+        $this->api->entity->spawnToAll($entityit3, $world);
+		//console("spawned ". $randomAreaX .", 80, ". $randomAreaZ);
 	}
     }
 	}
 	}
+
 
     public function spawnNightMobs(){
 		
@@ -109,11 +120,30 @@ apiversion=12
         //console("nightcheck...");
 	  
     if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)) {
+		$o = $this->api->player->online();
 		
-		if(count($this->api->player->online()) > 0){
-		
-        for ($i = 0; $i <= ((count($this->api->player->online()))*2); $i++) {
+		if(count($o) > 0){
 			
+			$rand_p = mt_rand(0, (count($o) - 1));
+			$world = $this->api->player->get($o[$rand_p])->level;
+			
+			if(($world->getName() == "Nether") or ($world->getName() == "nether")){
+				
+				$type = 36;
+				$randomAreaX = mt_rand(5,250);
+				$randomAreaZ = mt_rand(5,250);
+				$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
+				"x" => $randomAreaX,
+				"y" => 80,
+				"z" => $randomAreaZ,
+				"Health" => 20,
+			));
+			$this->api->entity->spawnToAll($entityit, $world);
+			//console("spawned ". $randomAreaX .", 80, ". $randomAreaZ);
+			}
+			else{
+			
+				//console("not in nether");
             $type = mt_rand(32,35);
 			$hp = array(
 				32 => 20,
@@ -125,35 +155,35 @@ apiversion=12
             $randomAreaX = mt_rand(5,250);
             $randomAreaZ = mt_rand(5,250);
 			
-            $entityit = $this->api->entity->add($this->api->level->getDefault(), ENTITY_MOB, $type, array(
+            $entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
 				"x" => $randomAreaX,
 				"y" => 80,
 				"z" => $randomAreaZ,
 				"Health" => $hp[$type],
 			));
 		  
-            $this->api->entity->spawnToAll($entityit, $this->api->level->getDefault());
-            $entityit2 = $this->api->entity->add($this->api->level->getDefault(), ENTITY_MOB, $type, array(
+            $this->api->entity->spawnToAll($entityit, $world);
+            $entityit2 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
 				"x" => $randomAreaX + mt_rand(1,3),
 				"y" => 80,
 				"z" => $randomAreaZ - mt_rand(1,3),
 				"Health" => $hp[$type],
 			));
 		  
-			$this->api->entity->spawnToAll($entityit2, $this->api->level->getDefault());
-			$entityit3 = $this->api->entity->add($this->api->level->getDefault(), ENTITY_MOB, $type, array(
+			$this->api->entity->spawnToAll($entityit2, $world);
+			$entityit3 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
 				"x" => $randomAreaX - mt_rand(1,3),
 				"y" => 80,
 				"z"  => $randomAreaZ - mt_rand(1,3),
 				"Health" => $hp[$type],
 			));
 		  
-			$this->api->entity->spawnToAll($entityit3, $this->api->level->getDefault());
-			$this->api->entity->spawnToAll($entityit, $this->api->level->getDefault());
+			$this->api->entity->spawnToAll($entityit3, $world);
+			//console("spawned ". $randomAreaX .", 80, ". $randomAreaZ);
         }
+		}
     }
     }
-	}
 	
     /*public function fireMoveEvent($entity)
     {
