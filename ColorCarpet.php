@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=ColorCarpet
 description=Click on carpet with dye and his now dyed
-version=1.1
+version=1.1.1
 author=ArkQuark
 class=Carpet
 apiversion=11,12
@@ -50,7 +50,7 @@ public function __construct(ServerAPI $api, $server = false){
 				$player = $data["player"];
 				$target = $data["target"];
 				
-				$pos = new Vector3($target->x,$target->y,$target->z);
+				$pos = new Vector3($target->x,$target->y,$target->z,$target->level);
 				$item = $player->getSlot($player->slot);
 				$dyeColor = $item->getMetadata();
 				$color = $this->woolColor[$dyeColor];

@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.1.1hotfix
+version=2.1.1hotfix2
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -98,7 +98,7 @@ apiversion=12
             "x" => $randomAreaX - mt_rand(1,3),
             "y" => 80,
             "z" => $randomAreaZ - mt_rand(1,3),
-            "Health" => $thos->hp[$type],
+            "Health" => $this->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
