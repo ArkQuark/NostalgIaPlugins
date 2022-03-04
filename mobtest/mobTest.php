@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.1.1
+version=2.1.1hotfix
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -62,7 +62,7 @@ apiversion=12
 			
 		//$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
 		//$npcplayer->spawned = true;
-	if((count($o) > 0) and ($this->spawn-animals == true)){
+	if((count($o) > 0) and ($this->spawnanimals == true)){
 		
 		$rand_p = mt_rand(0, (count($o) - 1));
 		$world = $this->api->player->get($o[$rand_p])->level;
