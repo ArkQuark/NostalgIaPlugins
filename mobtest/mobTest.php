@@ -4,31 +4,11 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.1
+version=2.1.1
 author=zhuowei
 class=MobTest
 apiversion=12
 */
-
-	/*
-	Not Small Changelog
-	===============
-	
-	1.0: Initial release
-	1.1: NPCs now chase you
-	1.2: NPCs now save, updated for API 9, added allstatic configuration parameter to emulate 1.0 behaviour
-	1.2.1: Killing an NPC no longer crashes the server
-	1.3: NPCs was removed from plugin (New name it's mobTest (original by onlypuppy7))
-	1.4: Now mob spawns with original hp and with radius 3 block around center mob, API 12 (ArkQuark's updates)
-	1.5: Fixed sheep color
-	1.6: Added config file
-	1.7: If server has 0 player this plugins don't spawn mobs
-	1.7.1: Fixed spawn time for mobs
-	
-	2.0: (World Update!)Added Zombie Pigman and mobs now spawn in world where located player(work if server has >1 players)
-	2.1: (ClearMob Update)Mobs will disappear every 15 minutes
-	
-	*/
 
   class MobTest implements Plugin{
 
@@ -37,6 +17,22 @@ apiversion=12
     public function __construct(ServerAPI $api, $server = false){
 		$this->server = ServerAPI::request();
 		$this->api = $api;
+		$this->hp = array(
+				10 => 4,
+				11 => 10,
+				12 => 10,
+				13 => 8,
+				
+				32 => 20,
+				33 => 20,
+				34 => 20,
+				35 => 16,
+				
+				36 => 20,
+		);
+		
+		$this->spawnanimals = $this->server->api->getProperty("spawn-animals");
+		$this->spawnmobs = $this->server->api->getProperty("spawn-mobs");
       //$this->npclist = array();
     }
 
@@ -46,13 +42,16 @@ apiversion=12
 		"//in minutes",
 		"dayMobsTime" => 3,
 		"nightMobsTime" => 3,
-		"clearMob" => true,
-		"clearTime" => 15,
+		"mobDespawn" => true,
+		"despawnTime" => 15,
+		"debug" => false,
 	));
 	
-    $this->api->schedule($this->config->get("dayMobsTime")*60*20, array($this,"spawnDayMobs"), array(), true); //change to set mob spawn delay in ticks (minutes*seconds*20)
+	//(minutes*seconds*20(ticks))
+    $this->api->schedule($this->config->get("dayMobsTime")*60*20, array($this,"spawnDayMobs"), array(), true); 
     $this->api->schedule($this->config->get("nightMobsTime")*60*20, array($this,"spawnNightMobs"), array(), true); 
-	$this->api->schedule($this->config->get("clearTime")*60*20, array($this, "mobClear"), array(), true);
+	$this->api->schedule($this->config->get("despawnTime")*60*20, array($this, "mobDespawn"), array(), true);
+	
 	 
     }
 
@@ -63,24 +62,17 @@ apiversion=12
 			
 		//$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
 		//$npcplayer->spawned = true;
-	if(count($o) > 0){
+	if((count($o) > 0) and ($this->spawn-animals == true)){
 		
 		$rand_p = mt_rand(0, (count($o) - 1));
 		$world = $this->api->player->get($o[$rand_p])->level;
 		
-		if(($world->getName() == "Nether") or ($world->getName() == "nether")){
+		if(($world->getName() == "Nether") or ($world->getName() == "nether")){//Animals dont spawn in nether
 			return;
 		}
 		else{
 			
-		//console("not in nether");
         $type = mt_rand(10, 13);
-		$hp = array(
-				10 => 4,
-				11 => 10,
-				12 => 10,
-				13 => 8,
-		);
         $randomAreaX = mt_rand(5,250);
         $randomAreaZ = mt_rand(5,250);
 		
@@ -88,7 +80,7 @@ apiversion=12
             "x" => $randomAreaX,
             "y" => 80,
             "z"  => $randomAreaZ,
-            "Health" => $hp[$type],
+            "Health" => $this->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
@@ -97,7 +89,7 @@ apiversion=12
             "x" => $randomAreaX + mt_rand(1,3),
             "y"  => 80,
             "z" => $randomAreaZ - mt_rand(1,3),
-            "Health" => $hp[$type],
+            "Health" => $this->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
@@ -106,12 +98,14 @@ apiversion=12
             "x" => $randomAreaX - mt_rand(1,3),
             "y" => 80,
             "z" => $randomAreaZ - mt_rand(1,3),
-            "Health" => $hp[$type],
+            "Health" => $thos->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
         $this->api->entity->spawnToAll($entityit3, $world);
-		//console("spawned ". $randomAreaX .", 80, ". $randomAreaZ);
+		if ($this->config->get("debug") == true){
+			console("Spawned animals in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName());
+		}
 	}
     }
 	}
@@ -119,44 +113,40 @@ apiversion=12
 
 
     public function spawnNightMobs(){
+		$o = $this->api->player->online();
 		
         //$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
         //$npcplayer->spawned = true;
         //console("nightcheck...");
 	  
     if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)) {
-		$o = $this->api->player->online();
 		
-		if(count($o) > 0){
+		if((count($o) > 0) and ($this->spawnmobs == true)){
 			
 			$rand_p = mt_rand(0, (count($o) - 1));
 			$world = $this->api->player->get($o[$rand_p])->level;
 			
-			if(($world->getName() == "Nether") or ($world->getName() == "nether")){
+			if(($world->getName() == "Nether") or ($world->getName() == "nether")){//Zombie Pigman spawn 
 				
 				$type = 36;
 				$randomAreaX = mt_rand(5,250);
 				$randomAreaZ = mt_rand(5,250);
+				
 				$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
 				"x" => $randomAreaX,
 				"y" => 80,
 				"z" => $randomAreaZ,
-				"Health" => 20,
+				"Health" => $this->hp[$type],
 			));
 			$this->api->entity->spawnToAll($entityit, $world);
-			//console("spawned ". $randomAreaX .", 80, ". $randomAreaZ);
+			if ($this->config->get("debug") == true){
+				console("Spawned Zombie Pigman in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName());
+			}
+			
 			}
 			else{
 			
-			//console("not in nether");
             $type = mt_rand(32,35);
-			$hp = array(
-				32 => 20,
-				33 => 20,
-				34 => 20,
-				35 => 16,
-				36 => 20,
-			);
             $randomAreaX = mt_rand(5,250);
             $randomAreaZ = mt_rand(5,250);
 			
@@ -164,7 +154,7 @@ apiversion=12
 				"x" => $randomAreaX,
 				"y" => 80,
 				"z" => $randomAreaZ,
-				"Health" => $hp[$type],
+				"Health" => $this->hp[$type],
 			));
 		  
             $this->api->entity->spawnToAll($entityit, $world);
@@ -172,7 +162,7 @@ apiversion=12
 				"x" => $randomAreaX + mt_rand(1,3),
 				"y" => 80,
 				"z" => $randomAreaZ - mt_rand(1,3),
-				"Health" => $hp[$type],
+				"Health" => $this->hp[$type],
 			));
 		  
 			$this->api->entity->spawnToAll($entityit2, $world);
@@ -180,11 +170,13 @@ apiversion=12
 				"x" => $randomAreaX - mt_rand(1,3),
 				"y" => 80,
 				"z"  => $randomAreaZ - mt_rand(1,3),
-				"Health" => $hp[$type],
+				"Health" => $this->hp[$type],
 			));
 		  
 			$this->api->entity->spawnToAll($entityit3, $world);
-			//console("spawned ". $randomAreaX .", 80, ". $randomAreaZ);
+			if ($this->config->get("debug") == true){
+				console("Spawned mobs in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName());
+			}
         }
 		}
     }
@@ -209,26 +201,30 @@ apiversion=12
       }
     } */
 
-public function mobClear(){
-	if($this->config->get("dayMobsTime") == true){
-		if((count($this->api->player->online())) > 0 ){
+	public function mobDespawn(){//tClearMob code 
+	$o = $this->api->player->online();
+	
+	if (($this->config->get("mobDespawn") == true) and (count($o) > 0)) {
+		if (($this->spawnanimals == true) or ($this->spawnmobs == true)){
+				
 			$cnt = 0;
 			$l = $this->server->query("SELECT EID FROM entities WHERE class = ".ENTITY_MOB.";");
-			if($l !== false and $l !== true){
+			if ($l !== false and $l !== true){
 				while(($e = $l->fetchArray(SQLITE3_ASSOC)) !== false){
 				$e = $this->api->entity->get($e["EID"]);
-				if($e instanceof Entity){
+				if ($e instanceof Entity){
 					$this->api->entity->remove($e->eid);
 					$cnt++;
 				}
 				}
 			}
+			if ($this->config->get("debug") == true){
+				console("Mob cleared");
+			}	
 		}
 	}
-	//console("Mob cleared");
 	return;
 }
-    
 
     public function __destruct(){
     }
