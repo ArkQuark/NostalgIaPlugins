@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=ColorCarpet
 description=Click on carpet with dye and his now dyed
-version=1.1.1
+version=1.2
 author=ArkQuark
 class=Carpet
 apiversion=11,12
@@ -53,23 +53,28 @@ public function __construct(ServerAPI $api, $server = false){
 				$pos = new Vector3($target->x,$target->y,$target->z,$target->level);
 				$item = $player->getSlot($player->slot);
 				$dyeColor = $item->getMetadata();
-				$color = $this->woolColor[$dyeColor];
+				if($dyeColor <= 15){
+					$color = $this->woolColor[$dyeColor];
+				}
 			
-			if(($target->getID() == 35) and ($item->getID() == 351)){
+			if(($target->getID() == 35) and ($item->getID() == 351) and ($target->getMetadata() <= 15) and ($dyeColor <= 15)){
 				if($this->woolColor[$target->getMetadata()] !== $dyeColor){
 				
 					$block = BlockAPI::get(35, $color);
 					$target->level->setBlock($pos, $block); 
-					$player->removeItem(351, $dyeColor , 1);
+					if($player->getGamemode() == "survival"){
+						$player->removeItem(351, $dyeColor , 1);
+					}
 				}
 			}
-			elseif(($target->getID() == 171) and ($item->getID() == 351)){
+			elseif(($target->getID() == 171) and ($item->getID() == 351) and ($target->getMetadata() <= 15) and ($dyeColor <= 15)){
 				if($this->woolColor[$target->getMetadata()] !== $dyeColor){
-					
 					$metadata = $item->getMetadata();
 					$block = BlockAPI::get(171, $color);
 					$target->level->setBlock($pos, $block); 
-					$player->removeItem(351, $dyeColor, 1);
+					if($player->getGamemode() == "survival"){
+						$player->removeItem(351, $dyeColor, 1);
+					}
 				}
 			}
 		}
