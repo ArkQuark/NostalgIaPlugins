@@ -4,30 +4,26 @@
 __PocketMine Plugin__
 name=GrassPlant
 description=Replant grass using wheat seeds.
-version=1.31
+version=1.4
 author=onlypuppy7
 class=Grass
-apiversion=11,12
+apiversion=12
 */
 
-class Grass implements Plugin
-{
+class Grass implements Plugin{
 	private $api;
 
-	public function __construct(ServerAPI $api, $server = false)
-	{
+	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 	}
 
-	public function init()
-	{
+	public function init(){
 		$this->api->addHandler("player.block.touch", array($this, "eventHandle"), 50);
 	}
 
+	public function eventHandle($data, $event){
 
-	public function eventHandle($data, $event) {
-
-		switch ($event) {
+		switch ($event){
 
 			case "player.block.touch":
 
@@ -45,7 +41,9 @@ class Grass implements Plugin
 					}
 					else{
 					$target->level->setBlock($pos, $block);
-					$player->removeItem($item, 0, 1);
+					if($player->getGamemode() == "survival"){
+						$player->removeItem($item, 0, 1);
+					}
 					}
 				}
 				break;
@@ -53,7 +51,6 @@ class Grass implements Plugin
 	}
 
 
-	public function __destruct()
-	{
+	public function __destruct(){
 	}
 }
