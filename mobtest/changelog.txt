@@ -16,3 +16,4 @@
 	2.0: (World Update!)Added Zombie Pigman and mobs now spawn in world where located player(work if server has >1 players)
 	2.1: (ClearMob Update)Mobs will disappear every 15 minutes
 	2.1.1: Code rewrite, debug to config
+    2.1.2: Fixing code

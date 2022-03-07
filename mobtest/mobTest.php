@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.1.1hotfix2
+version=2.1.2
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -13,27 +13,30 @@ apiversion=12
   class MobTest implements Plugin{
 
     private $api, $config;
+	public $mobRange = 128;
 
     public function __construct(ServerAPI $api, $server = false){
 		$this->server = ServerAPI::request();
 		$this->api = $api;
 		$this->hp = array(
+				//animals 
 				10 => 4,
 				11 => 10,
 				12 => 10,
 				13 => 8,
 				
+				//mobs
 				32 => 20,
 				33 => 20,
 				34 => 20,
 				35 => 16,
 				
+				//zombie pigman
 				36 => 20,
 		);
 		
 		$this->spawnanimals = $this->server->api->getProperty("spawn-animals");
 		$this->spawnmobs = $this->server->api->getProperty("spawn-mobs");
-      //$this->npclist = array();
     }
 
     public function init(){
@@ -52,7 +55,6 @@ apiversion=12
     $this->api->schedule($this->config->get("nightMobsTime")*60*20, array($this,"spawnNightMobs"), array(), true); 
 	$this->api->schedule($this->config->get("despawnTime")*60*20, array($this, "mobDespawn"), array(), true);
 	
-	 
     }
 
     public function spawnDayMobs(){
@@ -60,14 +62,12 @@ apiversion=12
 		if(($this->api->time->get() >= 0) and ($this->api->time->get() <= 9500)) {
 			$o = $this->api->player->online();
 			
-		//$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
-		//$npcplayer->spawned = true;
 	if((count($o) > 0) and ($this->spawnanimals == true)){
 		
 		$rand_p = mt_rand(0, (count($o) - 1));
 		$world = $this->api->player->get($o[$rand_p])->level;
 		
-		if(($world->getName() == "Nether") or ($world->getName() == "nether")){//Animals dont spawn in nether
+		if(($world->getName() == "Nether") or ($world->getName() == "nether")){//Animals don't spawn in nether
 			return;
 		}
 		else{
@@ -114,10 +114,6 @@ apiversion=12
 
     public function spawnNightMobs(){
 		$o = $this->api->player->online();
-		
-        //$npcplayer = new Player("0", "127.0.0.1", 0, 0); //all NPC related packets are fired at localhost
-        //$npcplayer->spawned = true;
-        //console("nightcheck...");
 	  
     if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)) {
 		
@@ -219,7 +215,7 @@ apiversion=12
 				}
 			}
 			if ($this->config->get("debug") == true){
-				console("Mob cleared");
+				console(count($l)." mobs has despawned");
 			}	
 		}
 	}
