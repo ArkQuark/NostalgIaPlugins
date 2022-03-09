@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.1.2
+version=2.2
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -30,9 +30,22 @@ apiversion=12
 				33 => 20,
 				34 => 20,
 				35 => 16,
-				
-				//zombie pigman
 				36 => 20,
+		);
+		
+		$this->mob = array(
+			//animals
+			"chicken" => 10,
+			"cow" => 11,
+			"pig" => 12,
+			"sheep" => 13,
+			
+			//mobs
+			"zombie" => 32,
+			"creeper" => 33,
+			"skeleton" => 34,
+			"spider" => 35,
+			"pigman" => 36,
 		);
 		
 		$this->spawnanimals = $this->server->api->getProperty("spawn-animals");
@@ -40,6 +53,8 @@ apiversion=12
     }
 
     public function init(){
+	$this->api->console->register("summon", "<mob>", array($this, "commandH"));
+	$this->api->console->alias("spawnmob", "summon");
 		
 	$this->config = new Config($this->api->plugin->configPath($this)."config.yml", CONFIG_YAML, array(
 		"//in minutes",
@@ -177,6 +192,59 @@ apiversion=12
 		}
     }
     }
+	
+	public function commandH($cmd, $params, $issuer, $alias){
+		$output = "";
+        switch ($cmd){
+			case 'summon':
+			if(!($issuer instanceof Player)){
+				$output .= "Please run this command in-game.\n";
+				break;
+			}
+			if((count($params) == 0) or (count($params) >= 2)){
+				$output .= "Usage: /$cmd <mob>.\n";
+				break;
+			}
+			elseif(count($params) == 1){
+				$type = $this->mob[strtolower($params[0])];
+				$mobname = array(
+					10 => "Chicken",
+					11 => "Cow",
+					12 => "Pig",
+					13 => "Sheep",
+					
+					32 => "Zombie",
+					33 => "Creeper",
+					34 => "Skeleton",
+					35 => "Spider",
+					36 => "Pigman",
+				);
+				
+				if($type != (10 or 11 or 12 or 13 or 14 or 32 or 33 or 34 or 35 or 36)){
+					$output .= "Unknown mob.\n";
+				}
+				else{
+					$x = $issuer->entity->x;
+					$spawnX = round($x, 1, PHP_ROUND_HALF_UP);
+					$y = $issuer->entity->y;
+					$spawnY = round($y, 1, PHP_ROUND_HALF_UP);
+					$z = $issuer->entity->z;
+					$spawnZ = round($z, 1, PHP_ROUND_HALF_UP);
+				
+					$spawnLevel = $issuer->entity->level;
+					$entityit = $this->api->entity->add($spawnLevel, ENTITY_MOB, $type, array(
+						"x" => $spawnX,
+						"y" => $spawnY,
+						"z" => $spawnZ,
+						"Health" => $this->hp[$type],
+					));
+					$this->api->entity->spawnToAll($entityit, $level);
+					$output .= "[Summon]".$mobname[$type]." spawned in ".$spawnX.", ".$spawnY.", ".$spawnZ.".\n";
+				}
+			}
+		}
+		return $output;
+	}
 	
     /*public function fireMoveEvent($entity)
     {

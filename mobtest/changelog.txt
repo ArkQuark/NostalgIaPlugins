@@ -1,19 +1,25 @@
 		
-	Mobtest Changelog
+	mobTest Changelog
 	==============
 	
+    (zhuowei's npctest)
 	1.0: Initial release
 	1.1: NPCs now chase you
 	1.2: NPCs now save, updated for API 9, added allstatic configuration parameter to emulate 1.0 behaviour
 	1.2.1: Killing an NPC no longer crashes the server
-	1.3: NPCs was removed from plugin (New name it's mobTest (original by onlypuppy7))
+
+    (onlypuppy7's mobtestop7)
+	1.3: NPCs was removed from plugin (New name it's mobTest)
+
+    (ArkQuark's mobTest)
 	1.4: Now mob spawns with original hp and with radius 3 block around center mob, API 12 (ArkQuark's updates)
 	1.5: Fixed sheep color
 	1.6: Added config file
 	1.7: If server has 0 player this plugins don't spawn mobs
 	1.7.1: Fixed spawn time for mobs
 	
-	2.0: (World Update!)Added Zombie Pigman and mobs now spawn in world where located player(work if server has >1 players)
-	2.1: (ClearMob Update)Mobs will disappear every 15 minutes
+	2.0: (World Update!) Added Zombie Pigman and mobs now spawn in world where located player(work if server has >1 players)
+	2.1: (ClearMob Update) Mobs will disappear every 15 minutes
 	2.1.1: Code rewrite, debug to config
     2.1.2: Fixing code
+    2.2: Added command: /summon <mob> or /spawnmob <mob>
