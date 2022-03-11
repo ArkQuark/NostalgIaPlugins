@@ -23,3 +23,4 @@
 	2.1.1: Code rewrite, debug to config
     2.1.2: Fixing code
     2.2: Added command: /summon <mob> or /spawnmob <mob>
+    2.2.1: Some fixes

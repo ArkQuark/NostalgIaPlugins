@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.2
+version=2.2.1
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -65,19 +65,20 @@ apiversion=12
 		"debug" => false,
 	));
 	
-	//(minutes*seconds*20(ticks))
-    $this->api->schedule($this->config->get("dayMobsTime")*60*20, array($this,"spawnDayMobs"), array(), true); 
-    $this->api->schedule($this->config->get("nightMobsTime")*60*20, array($this,"spawnNightMobs"), array(), true); 
-	$this->api->schedule($this->config->get("despawnTime")*60*20, array($this, "mobDespawn"), array(), true);
-	
-    }
+	if(count($this->api->player->online()) > 0){
+		//(minutes*seconds*20(ticks))
+		$this->api->schedule($this->config->get("dayMobsTime")*60*20, array($this,"spawnDayMobs"), array(), true); 
+		$this->api->schedule($this->config->get("nightMobsTime")*60*20, array($this,"spawnNightMobs"), array(), true); 
+		$this->api->schedule($this->config->get("despawnTime")*60*20, array($this, "mobDespawn"), array(), true);
+	}
+	}
 
     public function spawnDayMobs(){
 		
 		if(($this->api->time->get() >= 0) and ($this->api->time->get() <= 9500)) {
 			$o = $this->api->player->online();
 			
-	if((count($o) > 0) and ($this->spawnanimals == true)){
+	if(($this->spawnanimals == true)){
 		
 		$rand_p = mt_rand(0, (count($o) - 1));
 		$world = $this->api->player->get($o[$rand_p])->level;
@@ -119,7 +120,7 @@ apiversion=12
 		
         $this->api->entity->spawnToAll($entityit3, $world);
 		if ($this->config->get("debug") == true){
-			console("Spawned animals in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName());
+			console("Spawned animals in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName()."\n");
 		}
 	}
     }
@@ -132,7 +133,7 @@ apiversion=12
 	  
     if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)) {
 		
-		if((count($o) > 0) and ($this->spawnmobs == true)){
+		if($this->spawnmobs == true){
 			
 			$rand_p = mt_rand(0, (count($o) - 1));
 			$world = $this->api->player->get($o[$rand_p])->level;
@@ -151,7 +152,7 @@ apiversion=12
 			));
 			$this->api->entity->spawnToAll($entityit, $world);
 			if ($this->config->get("debug") == true){
-				console("Spawned Zombie Pigman in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName());
+				console("Spawned Zombie Pigman in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName()."\n");
 			}
 			
 			}
@@ -186,7 +187,7 @@ apiversion=12
 		  
 			$this->api->entity->spawnToAll($entityit3, $world);
 			if ($this->config->get("debug") == true){
-				console("Spawned mobs in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName());
+				console("Spawned mobs in ". $randomAreaX .", 80, ". $randomAreaZ. " world: ". $world->getName()."\n");
 			}
         }
 		}
@@ -266,9 +267,7 @@ apiversion=12
     } */
 
 	public function mobDespawn(){//tClearMob code 
-	$o = $this->api->player->online();
-	
-	if (($this->config->get("mobDespawn") == true) and (count($o) > 0)) {
+	if (($this->config->get("mobDespawn") == true)) {
 		if (($this->spawnanimals == true) or ($this->spawnmobs == true)){
 				
 			$cnt = 0;
