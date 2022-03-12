@@ -1,5 +1,5 @@
 ﻿# NostalgiaPlugins
-<center>Plugins for NostalgiaCore/PMMP 1.3.12</center><br>
+Plugins for NostalgiaCore 1.0/PMMP 1.3.12<br>
 Special thanks to SkilasticYT<br>
 <br>
 ColorCarpet:<br>
@@ -14,7 +14,7 @@ Description: Replaces dirt block to grass block if you click on him with an any 
 <br>
 IronWorkbench:<br>
 <br>
-!This version of plugin (1.2) is buggy!<br>
+!This version of plugin is buggy!<br>
 <br>
 Original Author: DartMiner43<br>
 Description: New workbench (iron block)!<br>
@@ -24,7 +24,6 @@ Crafts:<br>
     <li>Flint -> Gunpowder</li>
     <li>Quartz -> Bone</li>
     <li>Grass(not block) -> Dead bush</li>
-    <li>Flint and steel -> 4 Fire blocks</li>
     <li>8 saplings -> Grass block</li>
     <li>Coal(or Charcoal) -> Ink sac</li>
 </ul><br>
