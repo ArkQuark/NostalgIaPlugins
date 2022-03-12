@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=1.3
+version=1.3hotfix
 author=DartMiner43
 class=Iron
 apiversion=11,12
@@ -35,8 +35,8 @@ class Iron implements Plugin{
 				$player = $data["player"];
 				$target = $data["target"];
 				$block = $target;
-				$metadata = $itemheld->getMetadata(); 
 				$itemheld = $player->getSlot($player->slot);
+				$metadata = $itemheld->getMetadata(); 
 				$pos = new Position($target->x, $target->y, $target->z, $target->level);
 				$dropPos = new Position($target->x+0.5, $target->y+1, $target->z+0.5, $target->level);
 				
@@ -51,7 +51,7 @@ class Iron implements Plugin{
 						$player->removeItem(17, 3, 1);
 						$item = $this->api->block->fromString("PLANKS:3");
 						for($i = 4; $i > 0; $i--){
-							$this->api->entity->drop($dropPos, $item);
+							$this->api->entity->drop($dropPos, $item, 3);
 						}
 						break;
 					}
