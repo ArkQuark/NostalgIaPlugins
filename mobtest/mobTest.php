@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.3
+version=2.3hotfix
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -374,6 +374,7 @@ apiversion=12
 
 	public function mobDespawn(){//tClearMob code 
 	if ($this->config->get("mobDespawn") == true){
+		$o = $this->api->player->online();
 		if (($this->spawnanimals == true or $this->spawnmobs == true) and count($o) > 0){
 				
 			$cnt = 0;
