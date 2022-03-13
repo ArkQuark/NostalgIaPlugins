@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.3hotfix
+version=2.3.1
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -48,13 +48,26 @@ apiversion=12
 			"pigman" => 36,
 		);
 		
+		$this->mobName = array(
+			10 => "Chicken",
+			11 => "Cow",
+			12 => "Pig",
+			13 => "Sheep",
+					
+			32 => "Zombie",
+			33 => "Creeper",
+			34 => "Skeleton",
+			35 => "Spider",
+			36 => "Pigman",
+		);
+		
 		$this->spawnanimals = $this->server->api->getProperty("spawn-animals");
 		$this->spawnmobs = $this->server->api->getProperty("spawn-mobs");
     }
 
     public function init(){
 		$this->api->console->register("summon", "<mob>", array($this, "commandH"));
-		//$this->api->console->register("despawn", "", array($this, "commandH"));
+		$this->api->console->register("despawn", "", array($this, "despawnCommand"));
 		$this->api->console->alias("spawnmob", "summon");
 	
 		//$this->api->addHandler("player.block.touch", array($this, "cowMilk"), 50);
@@ -99,10 +112,10 @@ apiversion=12
 				if($block->getID() == 18){
 					continue;
 				}
-				elseif($block == 78){
+				elseif($block->getID() == 78){
 					continue;
 				}
-				elseif($block == 31){
+				elseif($block->getID() == 31){
 					continue;
 				}
 				break;
@@ -169,20 +182,20 @@ apiversion=12
 				$randomAreaZ = mt_rand(5,250);
 				
 				for($y = 127; $y > 0; --$y){//get upper block script
-				$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-				if($block->getID() !== 0){
-					if($block->getID() == 18){
-						continue;
+					$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+					if($block->getID() !== 0){
+						if($block->getID() == 18){
+							continue;
+						}
+						elseif($block->getID() == 78){
+							continue;
+						}
+						elseif($block->getID() == 31){
+							continue;
+						}
+						break;
 					}
-					elseif($block->getID() == 78){
-						continue;
-					}
-					elseif($block == 31){
-						continue;
-					}
-					break;
 				}
-			}
 		
 			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
 			if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Water or lava
@@ -217,7 +230,7 @@ apiversion=12
 					elseif($block->getID() == 78){
 						continue;
 					}
-					elseif($block == 31){
+					elseif($block->getID() == 31){
 						continue;
 					}
 					break;
@@ -266,24 +279,6 @@ apiversion=12
 	public function commandH($cmd, $params, $issuer, $alias){
 		$output = "";
         switch ($cmd){
-			/*case 'despawn':
-			$cnt = 0;
-			$l = $this->server->query("SELECT EID FROM entities WHERE class = ".ENTITY_MOB.";");
-			if(count($l) == 1){
-				$output .= "No mobs in all worlds!";
-				break;
-			}
-			if ($l !== false and $l !== true){
-				while(($e = $l->fetchArray(SQLITE3_ASSOC)) !== false){
-				$e = $this->api->entity->get($e["EID"]);
-				if ($e instanceof Entity){
-					$this->api->entity->remove($e->eid);
-					$cnt++;
-				}
-				}
-				$output .= (count($l)." mobs has been despawned!");
-				return;
-			}*/
 			case 'summon':
 			if(!($issuer instanceof Player)){
 				$output .= "Please run this command in-game.\n";
@@ -295,18 +290,6 @@ apiversion=12
 			}
 			elseif(count($params) == 1){
 				$type = $this->mob[strtolower($params[0])];
-				$mobname = array(
-					10 => "Chicken",
-					11 => "Cow",
-					12 => "Pig",
-					13 => "Sheep",
-					
-					32 => "Zombie",
-					33 => "Creeper",
-					34 => "Skeleton",
-					35 => "Spider",
-					36 => "Pigman",
-				);
 				
 				if($type != (10 or 11 or 12 or 13 or 14 or 32 or 33 or 34 or 35 or 36)){
 					$output .= "Unknown mob.\n";
@@ -327,10 +310,27 @@ apiversion=12
 						"Health" => $this->hp[$type],
 					));
 					$this->api->entity->spawnToAll($entityit, $level);
-					$output .= "[Summon] ".$mobname[$type]." spawned in ".$spawnX.", ".$spawnY.", ".$spawnZ.".";
+					$output .= "[Summon] ".$this->mobName[$type]." spawned in ".$spawnX.", ".$spawnY.", ".$spawnZ.".";
 				}
 			}
 		}
+		return $output;
+	}
+	
+	public function despawnCommand($cmd, $params, $issuer, $alias){
+		$output = "";
+		$cnt = 0;
+		$l = $this->server->query("SELECT EID FROM entities WHERE class = ".ENTITY_MOB.";");
+		if($l !== false and $l !== true){
+			while(($e = $l->fetchArray(SQLITE3_ASSOC)) !== false){
+				$e = $this->api->entity->get($e["EID"]);
+				if($e instanceof Entity){
+					$this->api->entity->remove($e->eid);
+					$cnt++;
+				}
+			}	
+		}
+		$output .= "[Despawn] Mobs has been despawned!";
 		return $output;
 	}
 	
@@ -375,8 +375,7 @@ apiversion=12
 	public function mobDespawn(){//tClearMob code 
 	if ($this->config->get("mobDespawn") == true){
 		$o = $this->api->player->online();
-		if (($this->spawnanimals == true or $this->spawnmobs == true) and count($o) > 0){
-				
+		if (($this->spawnanimals == true or $this->spawnmobs == true) and count($o) > 0){	
 			$cnt = 0;
 			$l = $this->server->query("SELECT EID FROM entities WHERE class = ".ENTITY_MOB.";");
 			if ($l !== false and $l !== true){
@@ -389,7 +388,7 @@ apiversion=12
 				}
 			}
 			if ($this->config->get("debug") == true){
-				console(count($l)." mobs has been despawned!");
+				console("Mobs has been despawned!");
 			}
 		}
 	}

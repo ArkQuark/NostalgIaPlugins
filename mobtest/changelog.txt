@@ -25,3 +25,4 @@
     2.2: Added command: /summon <mob> or /spawnmob <mob>
     2.2.1: Some fixes
     2.3: Mobs now spawn from Y 1 to 127, animals spawn from Y 1 to 127 but only on grass
+    2.3.1: Added new command: /despawn 
