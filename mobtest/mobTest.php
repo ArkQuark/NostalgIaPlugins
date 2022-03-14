@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.3.1
+version=2.4
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -65,6 +65,7 @@ apiversion=12
 		$this->spawnmobs = $this->server->api->getProperty("spawn-mobs");
     }
 
+
     public function init(){
 		$this->api->console->register("summon", "<mob>", array($this, "commandH"));
 		$this->api->console->register("despawn", "", array($this, "despawnCommand"));
@@ -73,19 +74,20 @@ apiversion=12
 		//$this->api->addHandler("player.block.touch", array($this, "cowMilk"), 50);
 		
 		$this->config = new Config($this->api->plugin->configPath($this)."config.yml", CONFIG_YAML, array(
-			"//in minutes",
-			"dayMobsTime" => 1,
-			"nightMobsTime" => 1,
+			"//in seconds",
+			"dayMobsTime" => 30,
+			"nightMobsTime" => 30,
 			"mobDespawn" => true,
-			"despawnTime" => 15,
+			"despawnTime" => 900,
 			"debug" => false,
 		));
 	
-			//(minutes*seconds*20(ticks))
-			$this->api->schedule($this->config->get("dayMobsTime")*60*20, array($this,"spawnDayMobs"), array(), true); 
-			$this->api->schedule($this->config->get("nightMobsTime")*60*20, array($this,"spawnNightMobs"), array(), true); 
-			$this->api->schedule($this->config->get("despawnTime")*60*20, array($this, "mobDespawn"), array(), true);
+			//seconds*20(ticks)
+			$this->api->schedule($this->config->get("dayMobsTime")*20, array($this,"spawnDayMobs"), array(), true); 
+			$this->api->schedule($this->config->get("nightMobsTime")*20, array($this,"spawnNightMobs"), array(), true); 
+			$this->api->schedule($this->config->get("despawnTime")*20, array($this, "mobDespawn"), array(), true);
 	}
+
 
     public function spawnDayMobs(){
 		
@@ -106,16 +108,10 @@ apiversion=12
         $randomAreaX = mt_rand(5,250);
         $randomAreaZ = mt_rand(5,250);
 		
-		for($y = 127; $y > 0; --$y){//get upper block script
+		for($y = 127; $y > 0; --$y){//get highest block script
 			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
 			if($block->getID() !== 0){
-				if($block->getID() == 18){
-					continue;
-				}
-				elseif($block->getID() == 78){
-					continue;
-				}
-				elseif($block->getID() == 31){
+				if($block->getID() == 18 or $block->getID() == 78 or $block->getID() == 31){//Ignore Leaves, Snow Layer, Tall Grass
 					continue;
 				}
 				break;
@@ -130,34 +126,34 @@ apiversion=12
 		$y++;
 		
         $entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-            "x" => $randomAreaX,
+            "x" => $randomAreaX + 0.5,
             "y" => $y,
-            "z"  => $randomAreaZ,
+            "z"  => $randomAreaZ + 0.5,
             "Health" => $this->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
         $this->api->entity->spawnToAll($entityit, $world);
         $entityit2 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-            "x" => $randomAreaX + mt_rand(1,3),
+            "x" => $randomAreaX + mt_rand(1,3) + 0.5,
             "y"  => $y,
-            "z" => $randomAreaZ - mt_rand(1,3),
+            "z" => $randomAreaZ - mt_rand(1,3) + 0.5,
             "Health" => $this->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
         $this->api->entity->spawnToAll($entityit2, $world);
         $entityit3 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-            "x" => $randomAreaX - mt_rand(1,3),
+            "x" => $randomAreaX - mt_rand(1,3) + 0.5,
             "y" => $y,
-            "z" => $randomAreaZ - mt_rand(1,3),
+            "z" => $randomAreaZ - mt_rand(1,3) + 0.5,
             "Health" => $this->hp[$type],
 			"Color" => mt_rand(0,15),
         ));
 		
         $this->api->entity->spawnToAll($entityit3, $world);
 		if ($this->config->get("debug") == true){
-			console("Spawned animals in ". $randomAreaX .", ".$y.", ". $randomAreaZ. " world: ". $world->getName(). ".");
+			console("Spawned animals in ". ($randomAreaX + 0.5) .", ".$y.", ". ($randomAreaZ + 0.5). " world: ". $world->getName(). ".");
 		}
 		}
     }
@@ -166,115 +162,94 @@ apiversion=12
 
 
     public function spawnNightMobs(){
-		$o = $this->api->player->online();
-	  
-    if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)) {
+	$o = $this->api->player->online();
+	if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)){
+		
+		if($this->spawnmobs == true and count($o) > 0){
+				
+			$rand_p = mt_rand(0, (count($o) - 1));
+			$world = $this->api->player->get($o[$rand_p])->level;
+			if($world->getName() == "Nether" or $world->getName() == "nether"){
+				$this->spawnNetherMob();
+			}
+			else{
+			
+				$type = mt_rand(32,35);
+				$randomAreaX = mt_rand(5,250);
+				$randomAreaZ = mt_rand(5,250);
+			
+				for($y = 1; $y < 127; ++$y){//get lowest block script
+					$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+					if($block->getID() == 0 or $block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Check Air, Water, Lava
+						break;
+					}
+				}
+		
+				$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+				if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Don't spawn mob in Water or Lava
+					console("oof");
+					$this->spawnNightMobs();
+					return;
+				}
+			
+				$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
+					"x" => $randomAreaX + 0.5,
+					"y" => $y,
+					"z" => $randomAreaZ + 0.5,
+					"Health" => $this->hp[$type],
+				));
+		  
+				$this->api->entity->spawnToAll($entityit, $world);
+				if ($this->config->get("debug") == true){
+					console("Spawned mobs in ". ($randomAreaX + 0.5) .", ". $y .", ". ($randomAreaZ + 0.5) ." world: ". $world->getName(). ".");
+				}
+			}
+		}
+    }
+    }
+	
+	
+	public function spawnNetherMob(){
+	$o = $this->api->player->online();  
+    if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)){
 		
 		if($this->spawnmobs == true and count($o) > 0){
 			
 			$rand_p = mt_rand(0, (count($o) - 1));
 			$world = $this->api->player->get($o[$rand_p])->level;
-			
-			if(($world->getName() == "Nether") or ($world->getName() == "nether")){//Zombie Pigman spawn 
 				
-				$type = 36;
-				$randomAreaX = mt_rand(5,250);
-				$randomAreaZ = mt_rand(5,250);
+			$type = 36;
+			$randomAreaX = mt_rand(5,250);
+			$randomAreaZ = mt_rand(5,250);
 				
-				for($y = 127; $y > 0; --$y){//get upper block script
-					$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-					if($block->getID() !== 0){
-						if($block->getID() == 18){
-							continue;
-						}
-						elseif($block->getID() == 78){
-							continue;
-						}
-						elseif($block->getID() == 31){
-							continue;
-						}
-						break;
-					}
-				}
-		
-			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-			if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Water or lava
-				$this->spawnNightMobs();
-				return;
-			}
-			$y++;
-				
-				$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-				"x" => $randomAreaX,
-				"y" => $y,
-				"z" => $randomAreaZ,
-				"Health" => $this->hp[$type],
-			));
-			$this->api->entity->spawnToAll($entityit, $world);
-			if ($this->config->get("debug") == true){
-				console("Spawned Zombie Pigman in ". $randomAreaX .", ". $y .", ". $randomAreaZ. " world: ". $world->getName(). ".");
-			}
-			}
-			else{
-			
-            $type = mt_rand(32,35);
-            $randomAreaX = mt_rand(5,250);
-            $randomAreaZ = mt_rand(5,250);
-			
-			for($y = 127; $y > 0; --$y){//get upper block script
+			for($y = 1; $y < 127; ++$y){//get lowest block script
 				$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-				if($block->getID() !== 0){
-					if($block->getID() == 18){
-						continue;
-					}
-					elseif($block->getID() == 78){
-						continue;
-					}
-					elseif($block->getID() == 31){
-						continue;
-					}
+				if($block->getID() == 0 or $block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){
 					break;
 				}
 			}
 		
 			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-			if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Water or lava
-				$this->spawnNightMobs();
+			if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Don't spawn mob in Water or Lava
+				console("oof");
+				$this->spawnNetherMob();
 				return;
 			}
-			$y++;
-			
-            $entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-				"x" => $randomAreaX,
+				
+			$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
+				"x" => $randomAreaX + 0.5,
 				"y" => $y,
-				"z" => $randomAreaZ,
+				"z" => $randomAreaZ + 0.5,
 				"Health" => $this->hp[$type],
 			));
-		  
-            $this->api->entity->spawnToAll($entityit, $world);
-            $entityit2 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-				"x" => $randomAreaX + mt_rand(1,3),
-				"y" => $y,
-				"z" => $randomAreaZ - mt_rand(1,3),
-				"Health" => $this->hp[$type],
-			));
-		  
-			$this->api->entity->spawnToAll($entityit2, $world);
-			$entityit3 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-				"x" => $randomAreaX - mt_rand(1,3),
-				"y" => $y,
-				"z"  => $randomAreaZ - mt_rand(1,3),
-				"Health" => $this->hp[$type],
-			));
-		  
-			$this->api->entity->spawnToAll($entityit3, $world);
+			$this->api->entity->spawnToAll($entityit, $world);
 			if ($this->config->get("debug") == true){
-				console("Spawned mobs in ". $randomAreaX .", ". $y .", ". $randomAreaZ. " world: ". $world->getName(). ".");
+				console("Spawned Zombie Pigman in ". ($randomAreaX + 0.5) .", ". $y .", ". ($randomAreaZ+ 0.5) ." world: ". $world->getName(). ".");
 			}
-        }
 		}
-    }
-    }
+	}
+	}
+	
 	
 	public function commandH($cmd, $params, $issuer, $alias){
 		$output = "";
@@ -317,6 +292,7 @@ apiversion=12
 		return $output;
 	}
 	
+	
 	public function despawnCommand($cmd, $params, $issuer, $alias){
 		$output = "";
 		$cnt = 0;
@@ -333,6 +309,7 @@ apiversion=12
 		$output .= "[Despawn] Mobs has been despawned!";
 		return $output;
 	}
+	
 	
     /*public function fireMoveEvent($entity)
     {
@@ -356,6 +333,7 @@ apiversion=12
 	/*public function chickenEggEvent(){
 	}
 	
+	
 	public function cowMilk($data, $event){
 		switch($event){
 			case "player.block.touch":
@@ -371,6 +349,7 @@ apiversion=12
 			}
 		}
 	}*/
+
 
 	public function mobDespawn(){//tClearMob code 
 	if ($this->config->get("mobDespawn") == true){
@@ -394,6 +373,7 @@ apiversion=12
 	}
 	return;
 }
+
 
     public function __destruct(){
     }

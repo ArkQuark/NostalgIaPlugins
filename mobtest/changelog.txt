@@ -24,5 +24,6 @@
     2.1.2: Fixing code
     2.2: Added command: /summon <mob> or /spawnmob <mob>
     2.2.1: Some fixes
-    2.3: Mobs now spawn from Y 1 to 127, animals spawn from Y 1 to 127 but only on grass
-    2.3.1: Added new command: /despawn 
+    2.3: Mobs now spawn from up to down, animals spawn from up to down but only on grass
+    2.3.1: Added new command: /despawn
+    2.4: Mobs and Pigman spawns from down to up new function for Pigman
