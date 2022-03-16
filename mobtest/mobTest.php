@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.4
+version=2.4hotfix
 author=zhuowei
 class=MobTest
 apiversion=12
@@ -187,7 +187,6 @@ apiversion=12
 		
 				$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
 				if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Don't spawn mob in Water or Lava
-					console("oof");
 					$this->spawnNightMobs();
 					return;
 				}
@@ -231,7 +230,6 @@ apiversion=12
 		
 			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
 			if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Don't spawn mob in Water or Lava
-				console("oof");
 				$this->spawnNetherMob();
 				return;
 			}
@@ -256,18 +254,18 @@ apiversion=12
         switch ($cmd){
 			case 'summon':
 			if(!($issuer instanceof Player)){
-				$output .= "Please run this command in-game.\n";
+				$output .= "Please run this command in-game.";
 				break;
 			}
 			if((count($params) == 0) or (count($params) >= 2)){
-				$output .= "Usage: /$cmd <mob>.\n";
+				$output .= "Usage: /$cmd <mob>.";
 				break;
 			}
 			elseif(count($params) == 1){
 				$type = $this->mob[strtolower($params[0])];
 				
 				if($type != (10 or 11 or 12 or 13 or 14 or 32 or 33 or 34 or 35 or 36)){
-					$output .= "Unknown mob.\n";
+					$output .= "Unknown mob.";
 				}
 				else{
 					$x = $issuer->entity->x;
