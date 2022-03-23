@@ -4,28 +4,28 @@
 __PocketMine Plugin__
 name=mobTest
 description=New spawn system for mobs!
-version=2.4hotfix
+version=3.0
 author=zhuowei
 class=MobTest
-apiversion=12
+apiversion=10,11,12
 */
 
-  class MobTest implements Plugin{
+	define("MOB_RANGE", 128);
+
+class MobTest implements Plugin{
 
     private $api, $config;
-	public $mobRange = 128;
 
     public function __construct(ServerAPI $api, $server = false){
 		$this->server = ServerAPI::request();
 		$this->api = $api;
+
 		$this->hp = array(
-				//animals 
 				10 => 4,
 				11 => 10,
 				12 => 10,
 				13 => 8,
-				
-				//mobs
+
 				32 => 20,
 				33 => 20,
 				34 => 20,
@@ -34,13 +34,11 @@ apiversion=12
 		);
 		
 		$this->mob = array(
-			//animals
 			"chicken" => 10,
 			"cow" => 11,
 			"pig" => 12,
 			"sheep" => 13,
-			
-			//mobs
+
 			"zombie" => 32,
 			"creeper" => 33,
 			"skeleton" => 34,
@@ -53,7 +51,7 @@ apiversion=12
 			11 => "Cow",
 			12 => "Pig",
 			13 => "Sheep",
-					
+
 			32 => "Zombie",
 			33 => "Creeper",
 			34 => "Skeleton",
@@ -61,8 +59,8 @@ apiversion=12
 			36 => "Pigman",
 		);
 		
-		$this->spawnanimals = $this->server->api->getProperty("spawn-animals");
-		$this->spawnmobs = $this->server->api->getProperty("spawn-mobs");
+		$this->serverSpawnAnimals = $this->server->api->getProperty("spawn-animals");
+		$this->serverSpawnMobs = $this->server->api->getProperty("spawn-mobs");
     }
 
 
@@ -75,57 +73,102 @@ apiversion=12
 		
 		$this->config = new Config($this->api->plugin->configPath($this)."config.yml", CONFIG_YAML, array(
 			"//in seconds",
-			"dayMobsTime" => 30,
-			"nightMobsTime" => 30,
+			"spawnMobs" => 30,
 			"mobDespawn" => true,
 			"despawnTime" => 900,
 			"debug" => false,
 		));
 	
 			//seconds*20(ticks)
-			$this->api->schedule($this->config->get("dayMobsTime")*20, array($this,"spawnDayMobs"), array(), true); 
-			$this->api->schedule($this->config->get("nightMobsTime")*20, array($this,"spawnNightMobs"), array(), true); 
+			//$this->api->schedule($this->config->get("dayMobsTime")*20, array($this,"spawnDayMobs"), array(), true); 
+			//$this->api->schedule($this->config->get("nightMobsTime")*20, array($this,"spawnNightMobs"), array(), true); 
 			$this->api->schedule($this->config->get("despawnTime")*20, array($this, "mobDespawn"), array(), true);
+			$this->api->schedule(0, array($this, "spawnMobs"), array());
+	}
+
+	public function spawnMobs(){
+		$o = $this->api->player->online();
+
+		if($this->serverSpawnAnimals == false and $this->serverSpawnMobs == false) return;
+		if(count($o) > 0){
+			$rand_p = mt_rand(0, (count($o) - 1));
+			$world = $this->api->player->get($o[$rand_p])->level;
+			$worldName = $world->getName();
+			$time = $this->api->time->get();
+
+			$this->o = $o;
+			$this->rand_p = $rand_p;
+			$this->world = $world;
+			$this->worldName = $worldName;
+
+			if($time >= 0 and $time <= 9500){
+				if($world->getName() == "Nether" or $world->getName() == "nether"){//Don't spawn animals in nether
+					$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+					return;
+				}
+				elseif($worldName == null){//trying fix gullcraft errors
+					$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+					console("[ERROR] Cannot get a player world!");
+					return;
+				}
+				$this->spawnDayMobs();
+				$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+				return;
+			}
+			elseif($time >= 10000 and $time <= 18000){
+				if($worldName == "Nether" or $worldName == "nether"){
+					$this->spawnNetherMob();
+					$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+					return;
+				}
+				elseif($worldName == null){//trying fix gullcraft errors
+					$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+					console("[ERROR] Cannot get a player world!");
+					return;
+				}
+				else{
+					$this->spawnNightMobs();
+					$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+					return;
+				}
+			}
+			else{
+				$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+				return;
+			}
+		}
+		else{
+			$this->api->schedule($this->config->get("spawnMobs")*20, array($this, "spawnMobs"), array());
+			return;
+		}
 	}
 
 
     public function spawnDayMobs(){
-		
-	if(($this->api->time->get() >= 0) and ($this->api->time->get() <= 9500)){
-		$o = $this->api->player->online();
-			
-	if($this->spawnanimals == true and count($o) > 0){
-		
-		$rand_p = mt_rand(0, (count($o) - 1));
-		$world = $this->api->player->get($o[$rand_p])->level;
-		
-		if(($world->getName() == "Nether") or ($world->getName() == "nether")){//Animals don't spawn in nether
-			return;
-		}
-		else{
 			
         $type = mt_rand(10, 13);
         $randomAreaX = mt_rand(5,250);
         $randomAreaZ = mt_rand(5,250);
 		
-		for($y = 127; $y > 0; --$y){//get highest block script
-			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-			if($block->getID() !== 0){
-				if($block->getID() == 18 or $block->getID() == 78 or $block->getID() == 31){//Ignore Leaves, Snow Layer, Tall Grass
+		for($y = 127; $y > 0; --$y){//get highest block
+			$block = $this->world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+			$blockID = $block->getID();
+			if($blockID !== 0){
+				if($blockID == 18 or $blockID == 78 or $blockID == 31){//Ignore Leaves, Snow Layer, Tall Grass
 					continue;
 				}
 				break;
 			}
 		}
 		
-		$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-		if($block->getID() !== 2){//Grass
+		$block = $this->world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+		if($block->getID() !== 2){//if not Grass don't spawn
 			$this->spawnDayMobs();
 			return;
 		}
 		$y++;
 		
-        $entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
+        $entityit = $this->api->entity->add($this->world, ENTITY_MOB, $type, array(
             "x" => $randomAreaX + 0.5,
             "y" => $y,
             "z"  => $randomAreaZ + 0.5,
@@ -133,8 +176,8 @@ apiversion=12
 			"Color" => mt_rand(0,15),
         ));
 		
-        $this->api->entity->spawnToAll($entityit, $world);
-        $entityit2 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
+        $this->api->entity->spawnToAll($entityit, $this->world);
+        $entityit2 = $this->api->entity->add($this->world, ENTITY_MOB, $type, array(
             "x" => $randomAreaX + mt_rand(1,3) + 0.5,
             "y"  => $y,
             "z" => $randomAreaZ - mt_rand(1,3) + 0.5,
@@ -142,8 +185,8 @@ apiversion=12
 			"Color" => mt_rand(0,15),
         ));
 		
-        $this->api->entity->spawnToAll($entityit2, $world);
-        $entityit3 = $this->api->entity->add($world, ENTITY_MOB, $type, array(
+        $this->api->entity->spawnToAll($entityit2, $this->world);
+        $entityit3 = $this->api->entity->add($this->world, ENTITY_MOB, $type, array(
             "x" => $randomAreaX - mt_rand(1,3) + 0.5,
             "y" => $y,
             "z" => $randomAreaZ - mt_rand(1,3) + 0.5,
@@ -151,101 +194,75 @@ apiversion=12
 			"Color" => mt_rand(0,15),
         ));
 		
-        $this->api->entity->spawnToAll($entityit3, $world);
+        $this->api->entity->spawnToAll($entityit3, $this->world);
 		if ($this->config->get("debug") == true){
-			console("Spawned animals in ". ($randomAreaX + 0.5) .", ".$y.", ". ($randomAreaZ + 0.5). " world: ". $world->getName(). ".");
+			console("Spawned animals in ". ($randomAreaX + 0.5) .", ".$y.", ". ($randomAreaZ + 0.5). " world: ". $this->worldName. ".");
 		}
-		}
-    }
-	}
 	}
 
 
-    public function spawnNightMobs(){
-	$o = $this->api->player->online();
-	if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)){
-		
-		if($this->spawnmobs == true and count($o) > 0){
-				
-			$rand_p = mt_rand(0, (count($o) - 1));
-			$world = $this->api->player->get($o[$rand_p])->level;
-			if($world->getName() == "Nether" or $world->getName() == "nether"){
-				$this->spawnNetherMob();
-			}
-			else{
+    public function spawnNightMobs(){	
+
+		$type = mt_rand(32,35);
+		$randomAreaX = mt_rand(5,250);
+		$randomAreaZ = mt_rand(5,250);
 			
-				$type = mt_rand(32,35);
-				$randomAreaX = mt_rand(5,250);
-				$randomAreaZ = mt_rand(5,250);
-			
-				for($y = 1; $y < 127; ++$y){//get lowest block script
-					$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-					if($block->getID() == 0 or $block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Check Air, Water, Lava
-						break;
-					}
-				}
-		
-				$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-				if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Don't spawn mob in Water or Lava
-					$this->spawnNightMobs();
-					return;
-				}
-			
-				$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-					"x" => $randomAreaX + 0.5,
-					"y" => $y,
-					"z" => $randomAreaZ + 0.5,
-					"Health" => $this->hp[$type],
-				));
-		  
-				$this->api->entity->spawnToAll($entityit, $world);
-				if ($this->config->get("debug") == true){
-					console("Spawned mobs in ". ($randomAreaX + 0.5) .", ". $y .", ". ($randomAreaZ + 0.5) ." world: ". $world->getName(). ".");
-				}
+		for($y = 1; $y < 127; ++$y){//get lowest block
+			$block = $this->world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+			if($block->getID() == 0 or ($block instanceof LiquidBlock)){//Check Air and Liquid
+				break;
 			}
 		}
-    }
-    }
+		
+		$block = $this->world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+		if($block instanceof LiquidBlock){//Don't spawn mob in Liquid
+			$this->spawnNightMobs();
+			return;
+		}
+			
+		$entityit = $this->api->entity->add($this->world, ENTITY_MOB, $type, array(
+			"x" => $randomAreaX + 0.5,
+			"y" => $y,
+			"z" => $randomAreaZ + 0.5,
+			"Health" => $this->hp[$type],
+		));
+
+		$this->api->entity->spawnToAll($entityit, $this->world);
+		if ($this->config->get("debug") == true){
+			console("Spawned mobs in ". ($randomAreaX + 0.5) .", ". $y .", ". ($randomAreaZ + 0.5) ." world: ". $this->worldName. ".");
+		}
+	}
 	
 	
 	public function spawnNetherMob(){
-	$o = $this->api->player->online();  
-    if(($this->api->time->get() >= 10000) and ($this->api->time->get() <= 18000)){
-		
-		if($this->spawnmobs == true and count($o) > 0){
-			
-			$rand_p = mt_rand(0, (count($o) - 1));
-			$world = $this->api->player->get($o[$rand_p])->level;
 				
-			$type = 36;
-			$randomAreaX = mt_rand(5,250);
-			$randomAreaZ = mt_rand(5,250);
+		$type = 36;
+		$randomAreaX = mt_rand(5,250);
+		$randomAreaZ = mt_rand(5,250);
 				
-			for($y = 1; $y < 127; ++$y){//get lowest block script
-				$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-				if($block->getID() == 0 or $block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){
-					break;
-				}
-			}
-		
-			$block = $world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
-			if($block->getID() == 8 or $block->getID() == 9 or $block->getID() == 10 or $block->getID() == 11){//Don't spawn mob in Water or Lava
-				$this->spawnNetherMob();
-				return;
-			}
-				
-			$entityit = $this->api->entity->add($world, ENTITY_MOB, $type, array(
-				"x" => $randomAreaX + 0.5,
-				"y" => $y,
-				"z" => $randomAreaZ + 0.5,
-				"Health" => $this->hp[$type],
-			));
-			$this->api->entity->spawnToAll($entityit, $world);
-			if ($this->config->get("debug") == true){
-				console("Spawned Zombie Pigman in ". ($randomAreaX + 0.5) .", ". $y .", ". ($randomAreaZ+ 0.5) ." world: ". $world->getName(). ".");
+		for($y = 1; $y < 127; ++$y){//get lowest block
+			$block = $this->world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+			if($block->getID() == 0 or ($block instanceof LiquidBlock)){//get lowest air or Liquid
+				break;
 			}
 		}
-	}
+		
+		$block = $this->world->getBlock(new Vector3($randomAreaX, $y, $randomAreaZ));
+		if($block instanceof LiquidBlock){//Don't spawn mob in Liquid
+			$this->spawnNetherMob();
+			return;
+		}
+				
+		$entityit = $this->api->entity->add($this->world, ENTITY_MOB, $type, array(
+			"x" => $randomAreaX + 0.5,
+			"y" => $y,
+			"z" => $randomAreaZ + 0.5,
+			"Health" => $this->hp[$type],
+		));
+		$this->api->entity->spawnToAll($entityit, $this->world);
+		if ($this->config->get("debug") == true){
+			console("Spawned Zombie Pigman in ". ($randomAreaX + 0.5) .", ". $y .", ". ($randomAreaZ+ 0.5) ." world: ". $this->worldName. ".");
+		}
 	}
 	
 	
@@ -352,7 +369,7 @@ apiversion=12
 	public function mobDespawn(){//tClearMob code 
 	if ($this->config->get("mobDespawn") == true){
 		$o = $this->api->player->online();
-		if (($this->spawnanimals == true or $this->spawnmobs == true) and count($o) > 0){	
+		if (($this->serverSpawnAnimals == true or $this->serverSpawnMobs == true) and count($o) > 0){	
 			$cnt = 0;
 			$l = $this->server->query("SELECT EID FROM entities WHERE class = ".ENTITY_MOB.";");
 			if ($l !== false and $l !== true){
@@ -377,5 +394,3 @@ apiversion=12
     }
 
 }
-
-  //Rising, 18000, midday is 4500, midnight is around 15000, decline, I think is the evening? I think that is 10000 (zhuowei)

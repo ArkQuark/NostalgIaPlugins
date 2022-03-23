@@ -27,3 +27,5 @@
     2.3: Mobs now spawn from up to down, animals spawn from up to down but only on grass
     2.3.1: Added new command: /despawn
     2.4: Mobs and Pigman spawns from down to up new function for Pigman
+
+    3.0: New spawn system for mobs! Less lag, more good code.
