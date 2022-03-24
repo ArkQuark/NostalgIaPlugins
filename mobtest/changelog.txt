@@ -29,3 +29,4 @@
     2.4: Mobs and Pigman spawns from down to up new function for Pigman
 
     3.0: New spawn system for mobs! Less lag, more good code.
+    3.1: /summon <mob> <amount>, 1/3 chance for bunch of animals, mobs don't spawn in transperent blocks, some /despawn and mobDespawn fixes
