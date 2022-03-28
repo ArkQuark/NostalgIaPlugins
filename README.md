@@ -1,5 +1,5 @@
 ﻿# NostalgiaPlugins
-Plugins for NostalgiaCore 1.0/PMMP 1.3.12<br>
+Plugins for NostalgiaCore 1.0/PocketMine 1.3.12<br>
 Special thanks to SkilasticYT<br>
 <br>
 ColorCarpet:<br>
@@ -19,14 +19,8 @@ IronWorkbench:<br>
 Original Author: DartMiner43<br>
 Description: New workbench (iron block)!<br>
 Crafts:<br>
-<ul>
-    <li>Jungle wood -> Jungle planks</li>
-    <li>Flint -> Gunpowder</li>
-    <li>Quartz -> Bone</li>
-    <li>Grass(not block) -> Dead bush</li>
-    <li>8 saplings -> Grass block</li>
-    <li>Coal(or Charcoal) -> Ink sac</li>
-</ul><br>
+/crafts<br>
+<br>
 DropsPlugin(old QuartzDrop):<br>
 <br>
 Author: ArkQuark<br>

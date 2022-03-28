@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=1.3hotfix
+version=1.4
 author=DartMiner43
 class=Iron
 apiversion=11,12
@@ -23,6 +23,7 @@ class Iron implements Plugin{
 
 	public function init(){
 		$this->api->addHandler("player.block.touch", array($this, "eventHandle"), 50);
+		$this->api->console->register("crafts", "", array($this, "command"));
 	}
 	
 	
@@ -73,7 +74,7 @@ class Iron implements Plugin{
 						$this->api->entity->drop($dropPos, $item);
 						break;
 					}
-					elseif(($target->getID() == 42) and ($itemheld->getID() == 263)){ //Coal -> Ink sack
+					elseif(($target->getID() == 42) and ($itemheld->getID() == 263)){ //Coal -> Inc sac
 						$player->removeItem(263, $metadata, 1);
 						$item = $this->api->block->fromString("DYE");
 						$this->api->entity->drop($dropPos, $item);
@@ -83,8 +84,23 @@ class Iron implements Plugin{
 		}
 	}
 
-	public function __destruct(){
-		
+	public function command($cmd, $params, $issuer, $alias){
+		$output = "";
+		switch($cmd){
+			case 'crafts';
+			$output .= "Crafts with IronWorkbench:
+Flint -> Gunpowder
+Jungle Wood -> 4 Jungle planks
+Quartz -> Bone
+Tall Grass -> Dead bush
+8 Saplings -> Grass block
+Coal -> Inc sac
+			";
+		}
+		return $output;
+	}
+
+	public function __destruct(){	
 	}
 	
 }
