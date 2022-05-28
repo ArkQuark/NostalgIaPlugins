@@ -1,5 +1,5 @@
 ﻿# NostalgiaPlugins
-Plugins for NostalgiaCore 1.0/PocketMine 1.3.12<br>
+Plugins for NostalgiaCore 1.0.1/PocketMine 1.3.12<br>
 Special thanks to SkilasticYT<br>
 <br>
 ColorCarpet:<br>
