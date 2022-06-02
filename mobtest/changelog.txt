@@ -50,3 +50,10 @@
 	      * New argument to summon - [baby]: If you add this arg any animal will summon like baby animal
 	      * Mobs and Pigmen will spawn only if his second block is transperent
 	      * Some cosmetical fixes
+	  test5:
+	      * For a time disabled custom spawn time in config due 100 mobs lock
+	      * Changed $world == null code
+              * Now chance baby animal is 5%
+	      * Removed data["Color"] from any animal spawn due NostalgiaCore sheepColor update
+	      * If /summon <mob> [amount], amount == 1 don't will say mobs
+	      * Testing mob fall ai
