@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=ColorCarpet
 description=Click on carpet with dye and his now dyed
-version=1.2
+version=1.3
 author=ArkQuark
 class=Carpet
 apiversion=11,12
@@ -42,41 +42,58 @@ public function __construct(ServerAPI $api, $server = false){
 	}
 
 	public function eventHandle($data, $event){
-
 		switch ($event){
-
 			case "player.block.touch":
 
 				$player = $data["player"];
+				$playerGamemode = $player->getGamemode();
+				
 				$target = $data["target"];
+				$targetID = $target->getID();
+				$targetMeta = $target->getMetadata();
 				
-				$pos = new Vector3($target->x,$target->y,$target->z,$target->level);
-				$item = $player->getSlot($player->slot);
-				$dyeColor = $item->getMetadata();
-				if($dyeColor <= 15){
-					$color = $this->woolColor[$dyeColor];
-				}
-			
-			if(($target->getID() == 35) and ($item->getID() == 351) and ($target->getMetadata() <= 15) and ($dyeColor <= 15)){
-				if($this->woolColor[$target->getMetadata()] !== $dyeColor){
+				$pos = new Position($target->x, $target->y, $target->z, $target->level);
 				
-					$block = BlockAPI::get(35, $color);
-					$target->level->setBlock($pos, $block); 
-					if($player->getGamemode() == "survival"){
-						$player->removeItem(351, $dyeColor , 1);
+				$itemHeld = $player->getSlot($player->slot);
+				$itemHeldID = $itemHeld->getID();
+				$itemHeldCount = $itemHeld->count;
+				$itemHeldReflection = new ReflectionClass('Item');
+				$itemHeldReflectionCount = $itemHeldReflection->getProperty('count');
+				
+				$itemHeldMeta = $itemHeld->getMetadata();
+				if($itemHeldMeta <= 15) $color = $this->woolColor[$itemHeldMeta];
+				else break;
+				
+				if($targetID != 35 or $targetID != 171) break;
+				if($targetMeta > 15) break;
+				
+				if($itemHeldID == 351){
+					if($this->woolColor[$targetMeta] != $itemHeldMeta){
+						$block = BlockAPI::get($targetID, $color);
+						$target->level->setBlock($pos, $block);
 					}
-				}
-			}
-			elseif(($target->getID() == 171) and ($item->getID() == 351) and ($target->getMetadata() <= 15) and ($dyeColor <= 15)){
-				if($this->woolColor[$target->getMetadata()] !== $dyeColor){
-					$metadata = $item->getMetadata();
-					$block = BlockAPI::get(171, $color);
-					$target->level->setBlock($pos, $block); 
-					if($player->getGamemode() == "survival"){
-						$player->removeItem(351, $dyeColor, 1);
+					
+					if($playerGamemode == "survival"){
+						if($itemHeldCount = 1) $player->removeItem($itemHeld, $itemHeldMeta , 1);
+						else $itemHeldReflectionCount->setValue($itemHeld, --$itemHeldCount);
+						break;
 					}
+					break;
 				}
-			}
+				elseif($itemHeldID == 263){
+					if($targetMeta != 15){
+						$block = BlockAPI::get($targetID, 15);
+						$target->level->setBlock($pos, $block);
+					}
+					
+					if($playerGamemode == "survival"){
+						if($itemHeldCount = 1) $player->removeItem($itemHeld, $itemHeldMeta , 1);
+						else $itemHeldReflectionCount->setValue($itemHeld, --$itemHeldCount);
+						break;
+					}
+					break;
+				}
+				
 		}
 	}
 
