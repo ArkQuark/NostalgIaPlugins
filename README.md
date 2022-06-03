@@ -1,5 +1,5 @@
 ﻿# NostalgiaPlugins
-Plugins for NostalgiaCore 1.0.1/PocketMine 1.3.12<br>
+Plugins for NostalgiaCore 1.0.1/PocketMine 1.3.12 (API 12)<br>
 Special thanks to SkilasticYT<br>
 <br>
 ColorCarpet:<br>
@@ -13,8 +13,6 @@ Original Author: onlypuppy7<br>
 Description: Replaces dirt block to grass block if you click on him with an any seed<br>
 <br>
 IronWorkbench:<br>
-<br>
-!This version of plugin is buggy!<br>
 <br>
 Original Author: DartMiner43<br>
 Description: New workbench (iron block)!<br>
