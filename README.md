@@ -1,8 +1,12 @@
 ﻿# NostalgiaPlugins
-Plugins for NostalgiaCore 1.0.1/PocketMine 1.3.12 (API 12)<br>
+Plugins for NostalgiaCore 1.0.2dev/PocketMine 1.3.12 (API 12)<br>
 Download NostalgiaCore 1.0.1: https://github.com/kotyaralih/NostalgiaCore/releases/tag/NostalgiaCore_1.0.1<br>
 <br>
 Special thanks to SkilasticYT<br>
+<br>
+PocketSkywars:<br>
+Original Author: Omattyao<br>
+Description: Simple Skywars Plugin<br>
 <br>
 ColorCarpet:<br>
 <br>
@@ -33,7 +37,7 @@ Drops:<br>
 mobTest(old npctest):<br>
 <br>
 Original Author: zhuowei<br>
-Descriprion: New spawn system for mobs!<br>
+Description: New spawn system for mobs!<br>
 <br>
 FarmingPlus:<br>
 <br>
