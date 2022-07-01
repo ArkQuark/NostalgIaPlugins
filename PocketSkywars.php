@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1.1 build1
+version=0.8.1 r1.1 build2
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -332,13 +332,12 @@ class PocketSkywars implements Plugin{
 				}
 				$players = $this->players;
 				$output .= "Survivors: ";
-				$surv = $this->getSurvival();
 				foreach($players as $player){
 					if($player->gamemode === 0){
-						if($players[$surv-1] === $player) $output .= $player->username.".";
 						$output .= $player->username.", ";
 					}
 				}
+				$output = substr($output, 0, -2);
 				break;
 			case "refill":
 				$output .= "Please run this command in game.";
@@ -617,13 +616,12 @@ class PocketSkywars implements Plugin{
 				}
 				$players = $this->players;
 				$output .= "Survivors: ";
-				$surv = $this->getSurvival();
 				foreach($players as $player){
 					if($player->gamemode === 0){
-						if($players[$surv-1] === $player) $output .= $player->username.".";
 						$output .= $player->username.", ";
 					}
 				}
+				$output = substr($output, 0, -2);
 				break;
 			case "refill":
 				if(!isset($params[0])){
@@ -982,6 +980,7 @@ class PocketSkywars implements Plugin{
 				$this->broadcast("[SkyWars] All players left from the game");
 			}
 			else{
+				$message = substr($message, 0, -2);
 				$this->broadcast("================================================\n"."[Skywars] This game is suspended!\n"."[Skywars] Remnants list:\n".$message."\n================================================");
 			}
 		}
