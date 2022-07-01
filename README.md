@@ -4,7 +4,18 @@ Download NostalgiaCore 1.0.1: https://github.com/kotyaralih/NostalgiaCore/releas
 <br>
 Special thanks to SkilasticYT<br>
 <br>
+PlayerStatistic:<br>
+<br>
+Author: ArkQuark<br>
+Description: Ingame time plugin
+<br>
+ProjectRubyINFO:<br>
+<br>
+Author: ArkQuark<br>
+Description: Says info messages(with ru lang support) and has /bug<br>
+<br>
 PocketSkywars:(works only with NostalgiaCore 1.0.1 and higher)<br>
+<br?
 Original Author: Omattyao<br>
 Description: Simple Skywars Plugin<br>
 <br>
