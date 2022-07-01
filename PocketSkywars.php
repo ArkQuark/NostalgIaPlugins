@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1 build1
+version=0.8.1 r1 build2
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -908,7 +908,7 @@ class PocketSkywars implements Plugin{
 		}else{
 			$message= "";
 			foreach($this->players as $player){
-				if($user->gamemode === 0){
+				if($player->gamemode === 0){
 					$message .= $player->username.", ";
 				}
 			}
@@ -939,8 +939,9 @@ class PocketSkywars implements Plugin{
 			$this->schedule(10, "gameStop", array("[Skywars] Countdown stopped due to no online."));
 		}
 		else{
-			$this->cancelCountSchedule();
+			$this->cancelAllSchedules();
 			$this->schedule(10, "gameLobby", array());
+			return;
 		}
 	}
 
