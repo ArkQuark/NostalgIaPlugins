@@ -3,7 +3,7 @@
 __PocketMine Plugin__
 name=PlayerStatistic
 description=Статистика наигранных минут игроков
-version=0.4.1 [SkywarsUpdate]
+version=0.4.2 [SkywarsUpdate]
 author=ArkQuark
 class=PlayerStats
 apiversion=12.1
@@ -16,7 +16,6 @@ class PlayerStats implements Plugin{
 	}
 	
 	public function init(){
-		date_default_timezone_set('Europe/Minsk');
 		$this->config = new Config($this->api->plugin->configPath($this)."times.yml", CONFIG_YAML, array());
 		$this->api->schedule(60*20, array($this, "checkOnline"), array(), true);
 		$this->api->event("player.join", array($this, "event"));
@@ -44,7 +43,6 @@ class PlayerStats implements Plugin{
 		//console(date('h:i:s'));
 		$players = $this->api->player->getAll();
 		if(count($players) > 0){
-			//console('oof');
 			foreach($players as $player){
 				$this->updateConfig($player);
 			}
@@ -54,7 +52,11 @@ class PlayerStats implements Plugin{
 	public function top(){
 		$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
 		arsort($cfg, SORT_NUMERIC);
-		return $cfg;
+		$array = array();
+		foreach($cfg as $username => $time){
+			array_push($array, array($username => $time));
+		}
+		return $array;
 	}
 	
 	public function updateConfig(Player $player){
@@ -103,10 +105,14 @@ class PlayerStats implements Plugin{
 			case 'mytime':
 				if($args[0] == "top"){
 					$top = $this->top();
-					foreach($top as $username => $time){
-						for($i = 0; $i <= 5; $i++){
-							$ptime = $this->formatTime($time);
-							$output .= $username." (".$ptime.")\n";
+					for($i = 0; $i < 5; $i++){
+						foreach($top as $int => $array){
+							if($int == $i){
+								foreach($array as $username => $time){
+									$ptime = $this->formatTime($time);
+									$output .= "[№".($i+1)."] ".$username." (".$ptime.")\n";
+								}
+							}
 						}
 					}
 				}
