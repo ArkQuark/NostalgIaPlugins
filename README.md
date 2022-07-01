@@ -15,7 +15,7 @@ Author: ArkQuark<br>
 Description: Says info messages(with ru lang support) and has /bug<br>
 <br>
 PocketSkywars:(works only with NostalgiaCore 1.0.1 and higher)<br>
-<br?
+<br>
 Original Author: Omattyao<br>
 Description: Simple Skywars Plugin<br>
 <br>
