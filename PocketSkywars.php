@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1 build2
+version=0.8.1 r1.1 build1
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -56,8 +56,21 @@ class PocketSkywars implements Plugin{
 		$this->api->console->register("sky", "PocketSkywars command.", array($this, "command"));
 		$this->api->console->register("kit", "PocketSkywars command.", array($this, "command"));
 		$this->api->console->register("refill", "Turn on or off chest refill", array($this, "command"));
+		$this->api->console->register("surv", "PocketSkywars command", array($this, "command"));
 		$this->api->ban->cmdWhitelist("kit");
 		$this->api->ban->cmdWhitelist("sky");
+		$this->api->ban->cmdWhitelist("surv");
+	}
+
+	public function kickNonSurvivalPlayers(){
+		$players = $this->api->player->getAll();
+		if(count($players) === 0) return;
+		foreach($players as $player){
+			if($player->gamemode !== 0){
+				$player->sendChat("[Skywars] Changing gamemode to survival.");
+				$this->schedule(5, "kick", array($player, "gamemode change"));
+			}
+		}
 	}
 
 	public function addEventHandler($array = array()){
@@ -83,16 +96,20 @@ class PocketSkywars implements Plugin{
 		switch($event){
 			case "entity.health.change":
 				if($this->status == "invincible"){
+					return false;
+				}
+				elseif($this->status == "lobby"){
 					if(isset($this->needKill[$data['entity']->eid])){
 						unset($this->needKill[$data['entity']->eid]);
 						return true;
 					}
-				return false;
+					return false;
 				}
 				break;
 			case "player.move":
 				if($data->y <= 5){
 					if($this->status == false){
+						$this->needKill[$data->eid] = true;
 						$this->api->entity->harm($data->eid, PHP_INT_MAX, "void", true);
 						break;
 					}
@@ -100,7 +117,7 @@ class PocketSkywars implements Plugin{
 					$player->blocked = true;
 					$player->teleport($this->getLobby());
 					$player->sendChat("You fall into void. You will be kicked!");
-					$this->schedule(5, "kick", array($player, "void"));
+					$this->schedule(2, "kick", array($player, "void"));
 				}
 				break;
 			case "player.join":
@@ -308,6 +325,21 @@ class PocketSkywars implements Plugin{
 	public function consoleCommand($cmd, $params, $issuer, $alias){
 		$output = "";
 		switch($cmd){
+			case "surv":
+				if($this->status != "invincible" or $this->status != "play"){
+					$output .= "Game not started!";
+					break;
+				}
+				$players = $this->players;
+				$output .= "Survivors: ";
+				$surv = $this->getSurvival();
+				foreach($players as $player){
+					if($player->gamemode === 0){
+						if($players[$surv-1] === $player) $output .= $player->username.".";
+						$output .= $player->username.", ";
+					}
+				}
+				break;
 			case "refill":
 				$output .= "Please run this command in game.";
 				break;
@@ -319,22 +351,13 @@ class PocketSkywars implements Plugin{
 							$output .= "The game has already begun!\n";
 							break;
 						}
-						
 						//console(var_dump($this->api->plugin->readYAML($this->api->plugin->configPath($this). "chests.yml")));
-						//console(var_dump($this->chestRandLoot())); 									//test for code problems
+						//console(var_dump($this->chestRandLoot())); 								   //test for code problems
 						//$this->chestRefill();
-						
-						$players = $this->api->player->getAll();
 						$this->api->chat->broadcast("[Skywars] Skywars server has been running!");
 						$field = array_shift($params);
 						if(empty($field)) $field = false;
 						$this->gameReady($field);
-						foreach($players as $player){
-							if($player->gamemode !== 0){
-								$player->sendChat("[Skywars] Changing gamemode to survival.");
-								$this->schedule(5, "kick", array($player, "gamemode change"));
-							}
-						}
 						break;
 					case "start":
 						if($this->status !== "lobby"){
@@ -587,6 +610,21 @@ class PocketSkywars implements Plugin{
 	public function playerCommand($cmd, $params, $issuer, $alias){
 		$output = "";
 		switch($cmd){
+			case "surv":
+				if($this->status != "invincible" or $this->status != "play"){
+					$output .= "Game not started!";
+					break;
+				}
+				$players = $this->players;
+				$output .= "Survivors: ";
+				$surv = $this->getSurvival();
+				foreach($players as $player){
+					if($player->gamemode === 0){
+						if($players[$surv-1] === $player) $output .= $player->username.".";
+						$output .= $player->username.", ";
+					}
+				}
+				break;
 			case "refill":
 				if(!isset($params[0])){
 					$output .= "[Skywars] You need set rarity for chest!\n";
@@ -626,17 +664,10 @@ class PocketSkywars implements Plugin{
 						$output .= "The game has already begun!\n";
 						break;
 					}
-					$players = $this->api->player->getAll();
 					$this->api->chat->broadcast("[Skywars] Skywars server has been running!");
 					$field = $params[1];
 					if(empty($field)) $field = false;
 					$this->gameReady($field);
-					foreach($players as $player){
-						if($player->gamemode !== 0){
-							$player->sendChat("[Skywars] Changing gamemode to survival.");
-							$this->schedule(5, "kick", array($player, "gamemode change"));
-						}
-					}
 					break;
 				}
 				elseif($params[0] === 'stop'){
@@ -744,14 +775,13 @@ class PocketSkywars implements Plugin{
 		
 		foreach($cfg as $chestID => $chestArray){
 			foreach($loot as $id => $lootArray){
-				//itemrarity spawn(2) < chestrarity middle(0)
-				//if($lootArray['rarity'] < $chestArray['rarity']) break 1;
 				if(Utils::chance($lootArray['chance']) and !($lootArray['rarity'] < $chestArray['rarity'])){
-					$slots = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26];
-					$chests[$chestID][$id]['id'] = $id;
 					$chests[$chestID][$id]['meta'] = $lootArray['meta'];
-					$chests[$chestID][$id]['count'] = mt_rand($lootArray['min-count'], $lootArray['max-count']);
-					foreach($slots as $key){
+					if($lootArray['max-count'] == 1) $chests[$chestID][$id]['count'] = 1;
+					else $chests[$chestID][$id]['count'] = mt_rand($lootArray['min-count'], $lootArray['max-count']);
+					
+					$slots = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26];
+					foreach($slots as $key){ //random slot
 						$tempSlot = mt_rand(0, 26);
 						if($tempSlot == $slots[$key]){
 							$random = mt_rand(0, 1);
@@ -769,6 +799,7 @@ class PocketSkywars implements Plugin{
 						}
 						$chests[$chestID][$id]['slot'] = $tempSlot;
 					}
+					
 				}
 			}
 		}
@@ -798,20 +829,20 @@ class PocketSkywars implements Plugin{
 			$loot = $this->chestRandLoot();
 			//console('generating loot for chest with id '.$cfgChestID);
 			foreach($loot[$cfgChestID] as $itemID => $array){
-				if(substr($itemID, 0, 5) == 'fire_'){
-					//console('Spawning fire sword');
+				/*if(substr($itemID, 0, 5) == 'fire_'){ //this not work
+					console('Spawning fire sword');
 					$itemID = str_replace('fire_', '', $itemID);
 					$id = constant(strtoupper($itemID));
 					$item = $this->api->block->getItem($id, $array['meta'], $array['count']);
-					//$itemReflection = new ReflectionClass('Item');
-					//$itemName = $itemReflection->getProperty('name');
-					//$itemName->setAccessible(true);
-					//$itemName->setValue($item, 'Fire Diamond Sword');
+					$itemReflection = new ReflectionClass('Item');
+					$itemName = $itemReflection->getProperty('name');
+					$itemName->setAccessible(true);
+					$itemName->setValue($item, 'Fire Diamond Sword');
 				}
-				else{
-					$id = constant(strtoupper($itemID));
-					$item = $this->api->block->getItem($id, $array['meta'], $array['count']);
-				}
+				else{*/
+				$id = constant(strtoupper($itemID));
+				$item = $this->api->block->getItem($id, $array['meta'], $array['count']);
+				//}
 				$tile->setSlot($array['slot'], $item);
 				//console('id: '.$itemID.' meta:'.$array['meta'].' count: '.$array['count'].' slot: '.$array['slot']);
 			}
@@ -826,6 +857,7 @@ class PocketSkywars implements Plugin{
 			$this->gameStop();
 			return;
 		}
+		$this->kickNonSurvivalPlayers();
 		$spawnPoints = count($this->getStartPoints());
 		if($spawnPoints > 1){
 			$this->server->api->setProperty("max-players", $spawnPoints);
@@ -854,6 +886,7 @@ class PocketSkywars implements Plugin{
 			$this->gameSuspend();
 			return;
 		}
+		$this->healAllPlayers();
 		$this->status = "invincible";
 		$time = $this->config["times"]["invincible"];
 		$this->readyScore();
@@ -882,11 +915,44 @@ class PocketSkywars implements Plugin{
 		$this->status = "play";
 		$this->healAllPlayers();
 		$this->tool("pvp", true);
-		$this->broadcast("[Skywars] You are no longer invincible.");
+		$this->broadcast("[Skywars] All survivors no longer invincible.");
 		$this->countdown($this->config["times"]["play"]);
-		//$time = $this->formatTime($this->config["times"]["chest-refill"]);
-		$this->broadcast("Chest will be refilled in ".$this->config["times"]["chest-refill"]." seconds.");
+		$time = $this->formatSec($this->config["times"]["chest-refill"]);
+		$this->broadcast("Chest will be refilled in ".$time);
 		$this->schedule($this->config["times"]["chest-refill"], "chestRefillInGame", false, false);
+	}
+
+	public function formatSec($s){
+		$time = "";
+		if($s == 0){
+			$time = "0 second";
+			return $time;
+		}
+		if($s < 60){
+			if($s > 1){
+				$time .= $m." seconds";
+			}
+			else{
+				$time .= $m." second";
+			}
+		}
+		elseif($s > 59 and $s < 3601){
+			$m = array(floor($s / 60), $s - floor($s / 60) * 60);
+			if($m[0] >= 2){
+				$time .= "$m[0] minutes";
+			}elseif($m[0] == 1){
+				$time .= "$m[0] minute";
+			}
+		}
+		else{
+			$hm = array(floor($s / 3600), $s - floor($s / 3600) * 3600);
+			if($hm[0] >= 2){
+				$time .= "$hm[0] hours";
+			}elseif($hm[0] == 1){
+				$time .= "$hm[0] hour";
+			}
+		}
+		return $time;
 	}
 
 	public function gameFinish($winner = false){
@@ -922,15 +988,6 @@ class PocketSkywars implements Plugin{
 		$this->schedule(10, "gameReady", $this->field["stage"]);
 		$this->record($winner, $this->score);
 		$this->confiscateItems();
-		$players = $this->api->player->getAll();
-		if(count($players) == 0) return;
-		foreach($players as $player){
-			if($player->gamemode !== 0){
-				$player->sendChat("[Skywars] Changing gamemode to survival.");
-				$this->schedule(5, "kick", array($player, "game finished"));
-			}
-			else $this->confiscateItems();
-		}
 	}
 
 	public function gameSuspend(){
