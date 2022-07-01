@@ -4,7 +4,7 @@ Download NostalgiaCore 1.0.1: https://github.com/kotyaralih/NostalgiaCore/releas
 <br>
 Special thanks to SkilasticYT<br>
 <br>
-PocketSkywars:<br>
+PocketSkywars:(works only with NostalgiaCore 1.0.1 and higher)<br>
 Original Author: Omattyao<br>
 Description: Simple Skywars Plugin<br>
 <br>
