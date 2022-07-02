@@ -2,7 +2,7 @@
   /*
 __PocketMine Plugin__
 name=ProjectRubyINFO
-version=0.3.8 [SkywarsUpdate]
+version=0.3.9 [SkywarsUpdate]
 author=ArkQuark
 class=ProjectRuby
 apiversion=12.1
@@ -18,7 +18,7 @@ class ProjectRuby implements Plugin{
 		$this->langEN = array(
 		"Server working on NostalgiaCore ".MAJOR_VERSION,
 		"If you seen a bug just /bug",
-		"Server ip saint.mcpehost.ru:20001",
+		"Server ip pocketsw.ddns.net:19132",
 		"Join to our discord server https://discord.gg/fzyBQCuwVj",
 		"Vote server on monitoring",
 		"Check your ingame time /mytime",
@@ -28,7 +28,7 @@ class ProjectRuby implements Plugin{
 		$this->langRU = array(
 		"Сервер работает на NostalgiaCore ".MAJOR_VERSION,
 		"Если вы заметили баг напишите /bug",
-		"Айпи сервера saint.mcpehost.ru:20001",
+		"Айпи сервера pocketsw.ddns.net:19132",
 		"Заходите на наш дискорд сервер https://discord.gg/fzyBQCuwVj",
 		"Голосуйте за сервер на мониторинге",
 		"Проверьте сколько вы наиграли на сервере /mytime",
