@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1.1 build2
+version=0.8.1 r1.1 build3
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -68,7 +68,7 @@ class PocketSkywars implements Plugin{
 		foreach($players as $player){
 			if($player->gamemode !== 0){
 				$player->sendChat("[Skywars] Changing gamemode to survival.");
-				$this->schedule(5, "kick", array($player, "gamemode change"));
+				$this->schedule(2, "kick", array($player, "gamemode change"));
 			}
 		}
 	}
@@ -283,7 +283,7 @@ class PocketSkywars implements Plugin{
 					$reason = "accident";
 					$this->score[$dead]["cause"] = $data["cause"];
 				}
-				$this->schedule(5, "kick", array($dead, $reason));
+				$this->schedule(1, "kick", array($dead, $reason));
 				$surv = $this->getSurvival();
 				if($surv > 1){
 					$this->broadcast("[Skywars] ".$surv." players remaining.");
@@ -326,18 +326,17 @@ class PocketSkywars implements Plugin{
 		$output = "";
 		switch($cmd){
 			case "surv":
-				if($this->status != "invincible" or $this->status != "play"){
-					$output .= "Game not started!";
-					break;
-				}
-				$players = $this->players;
-				$output .= "Survivors: ";
-				foreach($players as $player){
-					if($player->gamemode === 0){
-						$output .= $player->username.", ";
+				if($this->status == "invincible" or $this->status == "play"){
+					$players = $this->players;
+					$output .= "Survivors: ";
+					foreach($players as $player){
+						if($player->gamemode === 0){
+							$output .= $player->username.", ";
+						}
 					}
+					$output = substr($output, 0, -2);
 				}
-				$output = substr($output, 0, -2);
+				else $output .= "Game not started!";
 				break;
 			case "refill":
 				$output .= "Please run this command in game.";
@@ -610,18 +609,17 @@ class PocketSkywars implements Plugin{
 		$output = "";
 		switch($cmd){
 			case "surv":
-				if($this->status != "invincible" or $this->status != "play"){
-					$output .= "Game not started!";
-					break;
-				}
-				$players = $this->players;
-				$output .= "Survivors: ";
-				foreach($players as $player){
-					if($player->gamemode === 0){
-						$output .= $player->username.", ";
+				if($this->status == "invincible" or $this->status == "play"){
+					$players = $this->players;
+					$output .= "Survivors: ";
+					foreach($players as $player){
+						if($player->gamemode === 0){
+							$output .= $player->username.", ";
+						}
 					}
+					$output = substr($output, 0, -2);
 				}
-				$output = substr($output, 0, -2);
+				else $output .= "Game not started!";
 				break;
 			case "refill":
 				if(!isset($params[0])){
