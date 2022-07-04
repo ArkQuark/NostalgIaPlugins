@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1.1 build3
+version=0.8.1 r1.1
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -39,17 +39,17 @@ class PocketSkywars implements Plugin{
 		$event = ["tile.update" => true, 
 		"player.join" => true, 
 		"player.quit" => true, 
-		"player.death" => true,
+		"player.death" => true, 
 		"console.command.stop" => true, 
-		"player.move" => false,  
-		"player.spawn" => false,  
+		"player.move" => false, 
+		"player.spawn" => false, 
 		"entity.explosion" => false, 
 		"player.offline.get" => false, 
 		"player.block.break" => false, 
 		"player.block.place" => false, 
 		"player.block.touch" => false, 
-		"player.container.slot" => false,
-		"entity.health.change" => false,
+		"player.container.slot" => false, 
+		"entity.health.change" => false, 
 		"console.command.spawn" => false];
 		$this->addEventHandler($event);
 		
@@ -210,6 +210,10 @@ class PocketSkywars implements Plugin{
 				if($this->switch["backup"])	$this->backupLevel("break", $data);
 				break;
 			case "player.block.touch":
+				if($this->status == false or $this->status == "ready" or $this->status == "lobby" or $this->status == "finish"){
+					if($this->status == false and $this->api->ban->isOp($data['player']->username)) return true;
+					return false;
+				}
 				if($this->status == 'play' or $this->status == 'invincible'){
 					if($data['target']->y >= 119){
 						$data['player']->sendChat("You can't build here! (Y > 120)");
@@ -899,6 +903,7 @@ class PocketSkywars implements Plugin{
 		array_map(function($user){
 			$this->kit->equip($user);
 		}, array_keys($this->players));
+		$this->server->api->setProperty("max-players", 20);
 		$this->countdown($time);
 		$this->formatTime($time);
 		$surv = $this->getSurvival();
@@ -1562,7 +1567,7 @@ class PocketSkywars implements Plugin{
 		$air = BlockAPI::getItem(AIR, 0, 0);
 		foreach($players as $player){
 			foreach($player->inventory as $s => $item){
-				if($item->getID() !== Air){
+				if($item->getID() !== AIR){
 					$player->inventory[$s] = $air;
 				}
 			}
