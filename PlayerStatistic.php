@@ -2,8 +2,8 @@
   /*
 __PocketMine Plugin__
 name=PlayerStatistic
-description=Статистика наигранных минут игроков
-version=0.4.2 [SkywarsUpdate]
+description=Statictic players ingame time
+version=0.5.0
 author=ArkQuark
 class=PlayerStats
 apiversion=12.1
@@ -16,11 +16,12 @@ class PlayerStats implements Plugin{
 	}
 	
 	public function init(){
+		//date_default_timezone_set('Europe/Minsk');
 		$this->config = new Config($this->api->plugin->configPath($this)."times.yml", CONFIG_YAML, array());
 		$this->api->schedule(60*20, array($this, "checkOnline"), array(), true);
 		$this->api->event("player.join", array($this, "event"));
 		$this->api->event("player.quit", array($this, "event"));
-		$this->api->console->register("mytime", "Check your ingame time!", array($this, "commandHandler"));
+		$this->api->console->register("mytime", "Check ingame time!", array($this, "commandHandler"));
 		$this->api->ban->cmdWhitelist("mytime");
 	}
 	
@@ -71,31 +72,21 @@ class PlayerStats implements Plugin{
 		if($m == 0){
 			$time = "0 minutes";
 			return $time;
-		}
-		if($m < 60){
-			if($m > 1){
-				$time .= $m." minutes";
-			}
-			else{
-				$time .= $m." minute";
-			}
-		}
-		elseif($m > 59 and $m < 3601){
-			$hm = array(floor($m / 60), $m - floor($m / 60) * 60);
-			if($hm[0] >= 2){
-				$time .= "$hm[0] hours";
-			}elseif($hm[0] == 1){
-				$time .= "$hm[0] hour";
-			}
-		}
-		else{
-			$d = array(floor($m / 3600), $m - floor($m / 3600) * 3600);
-			if($d[0] >= 2){
-				$time .= "$d[0] days";
-			}elseif($d[0] == 1){
-				$time .= "$d[0] day";
-			}
-		}
+		}	
+		
+		$d = (int) ($m / 3600);
+		$h = (int) ($m / 60);
+		$m = fmod($m, 60);
+		
+		if($d == 1) $time .= $d." day ";
+		elseif($d > 1) $time .= $d." days ";
+			
+		if($h == 1) $time .= $h." hour ";
+		elseif($h > 1) $time .= $h." hours ";
+			
+		if($m == 1) $time .= $m." minute";
+		elseif($m > 1) $time .= $m." minutes";
+
 		return $time;
 	}
 	
@@ -103,7 +94,9 @@ class PlayerStats implements Plugin{
 		$output = '';
 		switch($cmd){
 			case 'mytime':
-				if($args[0] == "top"){
+				$arg = $args[0];
+				if($arg == "help") $output .= "/mytime top - Players ingame time top\n/mytime help - commands\n/mytime - Your ingame time";
+				elseif($arg == "top"){
 					$top = $this->top();
 					for($i = 0; $i < 5; $i++){
 						foreach($top as $int => $array){
@@ -116,7 +109,7 @@ class PlayerStats implements Plugin{
 						}
 					}
 				}
-				elseif($args[0] == ""){
+				elseif($arg == ""){
 					if(!$issuer instanceof Player) break;
 					$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
 					$time = $this->formatTime($cfg[$issuer->username]);
