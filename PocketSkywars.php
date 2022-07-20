@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1.1
+version=0.8.1 r1.2 build1
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -98,7 +98,7 @@ class PocketSkywars implements Plugin{
 				if($this->status == "invincible"){
 					return false;
 				}
-				elseif($this->status == "lobby"){
+				elseif($this->status == "lobby" or $this->status == "finish"){
 					if(isset($this->needKill[$data['entity']->eid])){
 						unset($this->needKill[$data['entity']->eid]);
 						return true;
@@ -108,7 +108,7 @@ class PocketSkywars implements Plugin{
 				break;
 			case "player.move":
 				if($data->y <= 5){
-					if($this->status == false){
+					if($this->status != "play" or $this->status != "invincible"){
 						$this->needKill[$data->eid] = true;
 						$this->api->entity->harm($data->eid, PHP_INT_MAX, "void", true);
 						break;
@@ -135,7 +135,7 @@ class PocketSkywars implements Plugin{
 				if($this->switch["first.spawn"] instanceof Position){
 					$data->setSpawn($this->switch["first.spawn"]);
 				}
-				if($this->status != false){
+				if($this->status != false and ($this->status != "play" or $this->status != "invincible")){
 					$this->showAccountInfo($data);
 				}
 				else{
@@ -221,7 +221,9 @@ class PocketSkywars implements Plugin{
 					}
 					return true;
 				}
+				
 				//$data['player']->sendChat($data['player']->getSlot($data['player']->slot)->getName());
+				
 				if(isset($this->select[$data["player"]->username])){
 					if($data['target']->getID() === CHEST){
 						$target = $data['target'];
@@ -833,11 +835,32 @@ class PocketSkywars implements Plugin{
 					console('Spawning fire sword');
 					$itemID = str_replace('fire_', '', $itemID);
 					$id = constant(strtoupper($itemID));
+					$nbt = new NBT();
+					$nbt->write(chr(NBT::TAG_COMPOUND)."\x00\x00");
+					$nbt->write(chr(NBT::TAG_STRING));
+		
+					$nbt->writeTAG_String("Name");
+					switch($id){
+						case WOODEN_SWORD:
+							$nbt->writeTAG_String("Fire Wooden Sword");
+							break;
+						case GOLDEN_SWORD:
+							$nbt->writeTAG_String("Fire Golden Sword");
+							break;
+						case STONE_SWORD:
+							$nbt->writeTAG_String("Fire Stone Sword");
+							break;
+						case IRON_SWORD:
+							$nbt->writeTAG_String("Fire Iron Sword");
+							break;
+						case DIAMOND_SWORD:
+							$nbt->writeTAG_String("Fire Diamond Sword");
+							break;
+						default:
+							break;
+					}
+					$nbt->write(chr(NBT::TAG_STRING));
 					$item = $this->api->block->getItem($id, $array['meta'], $array['count']);
-					$itemReflection = new ReflectionClass('Item');
-					$itemName = $itemReflection->getProperty('name');
-					$itemName->setAccessible(true);
-					$itemName->setValue($item, 'Fire Diamond Sword');
 				}
 				else{*/
 				$id = constant(strtoupper($itemID));
@@ -962,13 +985,14 @@ class PocketSkywars implements Plugin{
 		$this->tool("world.backup", false);
 		$this->tool("world.protect", $this->config["world-protect"]);
 		$this->teleportAllPlayers("lobby");
+		$this->kickNonSurvivalPlayers();
 		$this->cancelSchedule($this->s_id["finish"]);
 		$this->cancelCountSchedule();
 		if($winner !== false){
 			if($this->givePrize($winner)){
-				$msg = "\"".$winner."\" won a prize of \"".$this->config["prize"]."\"PM for the tournament!\n";
+				$msg = "".$winner." won a prize of ".$this->config["prize"]."PM for the tournament!\n";
 			}else{
-				$msg = "\"".$winner."\" won the tournament!\n";
+				$msg = "".$winner." won the tournament!\n";
 			}
 			$this->broadcast("================================================\n"."The game has been finished!\n".$msg."================================================");
 			$this->giveEXP($winner, $this->config["exp"]["win-tournament"]);
