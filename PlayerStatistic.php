@@ -3,7 +3,7 @@
 __PocketMine Plugin__
 name=PlayerStatistic
 description=Statictic players ingame time
-version=0.5.0
+version=0.5.1
 author=ArkQuark
 class=PlayerStats
 apiversion=12.1
@@ -74,8 +74,9 @@ class PlayerStats implements Plugin{
 			return $time;
 		}	
 		
-		$d = (int) ($m / 3600);
-		$h = (int) ($m / 60);
+		$d = (int) ($m / 1440);
+		if($d > 0) $h = (int) (fmod($m, 1440) / 60);
+		else $h = (int) ($m / 60);
 		$m = fmod($m, 60);
 		
 		if($d == 1) $time .= $d." day ";
@@ -85,6 +86,7 @@ class PlayerStats implements Plugin{
 		elseif($h > 1) $time .= $h." hours ";
 			
 		if($m == 1) $time .= $m." minute";
+		elseif($m == 0) $time = rtrim($time, " ");
 		elseif($m > 1) $time .= $m." minutes";
 
 		return $time;
