@@ -3,7 +3,7 @@
 __PocketMine Plugin__
 name=PlayerStatistic
 description=Statictic players ingame time
-version=0.5.1
+version=0.6.0
 author=ArkQuark
 class=PlayerStats
 apiversion=12.1
@@ -20,9 +20,10 @@ class PlayerStats implements Plugin{
 		$this->config = new Config($this->api->plugin->configPath($this)."times.yml", CONFIG_YAML, array());
 		$this->api->schedule(60*20, array($this, "checkOnline"), array(), true);
 		$this->api->event("player.join", array($this, "event"));
-		$this->api->event("player.quit", array($this, "event"));
+		//$this->api->event("player.quit", array($this, "event"));
 		$this->api->console->register("mytime", "Check ingame time!", array($this, "commandHandler"));
 		$this->api->ban->cmdWhitelist("mytime");
+		$this->convertNicknames();
 	}
 	
 	public function event(&$data, $event){
@@ -35,8 +36,17 @@ class PlayerStats implements Plugin{
 					$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."times.yml", $cfg);
 				}
 				break;
-			case 'player.quit':
-				break;
+			/*case 'player.quit':
+				break;*/
+		}
+	}
+	
+	public function convertNicknames(){
+		$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
+		foreach($cfg as $nickname => $time){
+			unset($cfg[$nickname]);
+			$cfg[strtolower($nickname)] = $time;
+			$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."times.yml", $cfg);
 		}
 	}
 	
@@ -62,7 +72,7 @@ class PlayerStats implements Plugin{
 	
 	public function updateConfig(Player $player){
 		$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
-		$username = $player->username;
+		$username = strtolower($player->username);
 		++$cfg[$username];
 		$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."times.yml", $cfg);
 	}
@@ -96,29 +106,45 @@ class PlayerStats implements Plugin{
 		$output = '';
 		switch($cmd){
 			case 'mytime':
-				$arg = $args[0];
-				if($arg == "help") $output .= "/mytime top - Players ingame time top\n/mytime help - commands\n/mytime - Your ingame time";
-				elseif($arg == "top"){
-					$top = $this->top();
-					for($i = 0; $i < 5; $i++){
-						foreach($top as $int => $array){
-							if($int == $i){
-								foreach($array as $username => $time){
-									$ptime = $this->formatTime($time);
-									$output .= "[№".($i+1)."] ".$username." (".$ptime.")\n";
-								}
+				switch($args[0]){
+					case "help":
+						$output .= "/mytime top - Players ingame time top\n/mytime see <nickname> - See player's ingame time\n/mytime - Your ingame time";
+						break;
+					case "top":
+						$top = $this->top();
+						for($i = 0; $i < 5; $i++){
+							foreach($top[$i] as $username => $time){
+								$pTime = $this->formatTime($time);
+								$output .= "[№".($i+1)."] ".$username." (".$pTime.")\n";
 							}
 						}
-					}
+						break;
+					case "see":
+						$username = strtolower($args[1]);
+						if($username == ""){
+							$output .= "Usage: /mytime see <nickname>";
+							break;
+						}
+						$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
+						if(!isset($cfg[$username])){
+							$output .= "This Player doesn't exist!";
+							break;
+						}
+						else{
+							$time = $cfg[$username];
+							$output .= $username."'s ingame time: ".$this->formatTime($time);
+						}
+						break;
+					case "":
+						if(!$issuer instanceof Player){
+							$output .= "Please run this command ingame!";
+							break;
+						}
+						$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
+						$time = $this->formatTime($cfg[strtolower($issuer->username)]);
+						$output .= "Your ingame time: ".$time;
+						break;
 				}
-				elseif($arg == ""){
-					if(!$issuer instanceof Player) break;
-					$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
-					$time = $this->formatTime($cfg[$issuer->username]);
-					$output .= "Your ingame time: ".$time;
-				}
-				break;
-			
 		}
 		return $output;
 	}
