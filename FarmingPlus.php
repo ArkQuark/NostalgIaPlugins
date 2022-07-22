@@ -3,10 +3,10 @@
 __PocketMine Plugin__
 name=FarmingPlus
 description=Useful plugin for Farming using Hoe
-version=1.1
+version=1.2
 author=ArkQuark
 class=FarmingPlus
-apiversion=11,12
+apiversion=12,12.1
 */
 
 class FarmingPlus implements Plugin{
@@ -29,23 +29,17 @@ class FarmingPlus implements Plugin{
 				$target = $data["target"];
 				$targetID = $target->getID();
 				$targetMeta = $target->getMetadata();
-				$targetReflection = new ReflectionClass('Block');
-				$targetReflectionMeta = $targetReflection->getProperty('meta');
-				$targetReflectionMeta->setAccessible(true);
 				
 				$itemHeld = $player->getSlot($player->slot);
 				
 				$dropPos = new Position($target->x+0.5, $target->y, $target->z+0.5, $target->level);
 				$pos = new Vector3($target->x, $target->y, $target->z, $target->level);
 				
-				if($itemHeld->isHoe() != true) break;
-				if($targetMeta != 7) break;
-				if($target->getSide(0)->getID() != 60) break;
+				if($itemHeld->isHoe() === false or $targetMeta != 7 or $target->getSide(0)->getID() != 60) break;
 				
 				switch($targetID){
 					case 59: //wheat
-						$targetReflectionMeta->setValue($target, 0);
-						$target->level->setBlock($target, $target);
+						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new WheatBlock, true, false, true);
 						
 						$item = $this->api->block->fromString("WHEAT_SEEDS");
 						for($i = mt_rand(0, 3); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
@@ -53,10 +47,8 @@ class FarmingPlus implements Plugin{
 						$item = $this->api->block->fromString("WHEAT");
 						$this->api->entity->drop($dropPos, $item);
 						break;
-						
 					case 244: //beetroot
-						$targetReflectionMeta->setValue($target, 0);
-						$target->level->setBlock($target, $target);
+						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new BeetrootBlock, true, false, true);
 						
 						$item = $this->api->block->fromString("BEETROOT_SEEDS");
 						for($i = mt_rand(0, 3); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
@@ -64,18 +56,14 @@ class FarmingPlus implements Plugin{
 						$item = $this->api->block->fromString("BEETROOT");
 						$this->api->entity->drop($dropPos, $item);
 						break;
-						
 					case 141: //carrot
-						$targetReflectionMeta->setValue($target, 0);
-						$target->level->setBlock($target, $target);
+						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new CarrotBlock, true, false, true);
 						
 						$item = $this->api->block->fromString("CARROT");
 						for($i = mt_rand(0, 2); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
 						break;
-						
 					case 142: //potato
-						$targetReflectionMeta->setValue($target, 0);
-						$target->level->setBlock($target, $target);
+						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new PotatoBlock, true, false, true);
 						
 						$item = $this->api->block->fromString("POTATO");
 						for($i = mt_rand(0, 2); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
