@@ -3,7 +3,7 @@
 __PocketMine Plugin__
 name=PlayerStatistic
 description=Statictic players ingame time
-version=0.6.0
+version=0.6.1
 author=ArkQuark
 class=PlayerStats
 apiversion=12.1
@@ -30,7 +30,7 @@ class PlayerStats implements Plugin{
 		switch($event){
 			case 'player.join':
 				$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
-				$username = $data->username;
+				$username = strtolower($data->username);
 				if(!isset($cfg[$username])){
 					$cfg[$username] = 0;
 					$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."times.yml", $cfg);
