@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=2.0
+version=2.1
 author=DartMiner43
 class=Iron
 apiversion=11,12
@@ -24,6 +24,7 @@ class Iron implements Plugin{
 	public function init(){
 		$this->api->addHandler("player.block.touch", array($this, "eventHandle"), 50);
 		$this->api->console->register("crafts", "", array($this, "command"));
+		$this->api->ban->cmdWhitelist("crafts");
 	}
 	
 	
