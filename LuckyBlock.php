@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyBlock
 description=New LuckyBlock plugin
-version=1.1.0
+version=1.1.1
 author=ArkQuark
 class=LBmain
 apiversion=12.1
@@ -239,9 +239,6 @@ class LBExecute{
 			case "Diamonds":
 				$this->drop(DIAMOND, 0, mt_rand(0, 5));
 				break;
-			case "RainbowPillar":
-				(new LBStructure($this->api))->rainbowPillar($x, $y, $z, $level);
-				break;
 			case "GlowingObsidian":
 				$this->drop(GLOWING_OBSIDIAN, 0, mt_rand(2, 8));
 				break;
@@ -264,6 +261,9 @@ class LBExecute{
 					$this->drop(SPAWN_EGG, $meta, mt_rand(1, 3), 40);
 				}
 				break;
+			case "RainbowPillar":
+				(new LBStructure($this->api))->rainbowPillar($x, $y, $z, $level);
+				break;
 
 			default:
 				console("Undefined choice: $choice!");
@@ -283,8 +283,8 @@ class LBRandom{
 		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap"]; //no todo
 		$this->common = ["Tools", "LuckyAnimal", "LuckyMonster", "ChainArmor", "Seeds", "Food", "MobDrop", "WoodStuff", "StoneStuff"]; //no todo
 		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure"
-		$this->rare = ["DiamondPickaxe", "Diamonds", "RainbowPillar", "GlowingObsidian"]; //"WishingWell"
-		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs"]; //"LuckySword(no todo)"
+		$this->rare = ["DiamondPickaxe", "Diamonds", "GlowingObsidian"]; //"WishingWell"
+		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs", "RainbowPillar"]; //"LuckySword(no todo)"
 	}
 
 	public function randomChoice(){
