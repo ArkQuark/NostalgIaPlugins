@@ -4,15 +4,15 @@
 __PocketMine Plugin__
 name=LuckyRace
 description=Works only with 2 players!
-version=1.0
+version=1.0.1
 author=ArkQuark 
-class=LuckyRace
+class=LRmain
 apiversion=12.1
 */
 
 
-class LuckyRace implements Plugin{
-
+class LRmain implements Plugin{
+	
     public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 		$this->status = "play";
@@ -20,7 +20,11 @@ class LuckyRace implements Plugin{
     }
 
     public function init(){
-		$this->config = new Config($this->api->plugin->configPath("config")."AIO.yml", CONFIG_YAML, [
+		$path = join(DIRECTORY_SEPARATOR, [DATA_PATH . "plugins/configs", ""]);
+		if(!file_exists($path)){
+			mkdir($path, 0777);
+		}
+		$this->config = new Config($path."AIO.yml", CONFIG_YAML, [
 			"info" => "All in one config",
 			"LuckyRace" => [
 				"x" => 127.5,
@@ -52,9 +56,9 @@ class LuckyRace implements Plugin{
 				if($data[0] === "tp @a Arena"){
 					$this->status = "invincible";
 					$players = $this->api->player->getAll();
-					$level = $this->api->level->get($this->config["LuckyRace"]["level"]);
+					$level = $this->api->level->get($this->config->get("LuckyRace")["level"]);
 					foreach($players as $p){
-						$p->teleport(new Position($this->config["LuckyRace"]["x"], $this->config["LuckyRace"]["y"], $this->config["LuckyRace"]["z"], $level));
+						$p->teleport(new Position($this->config->get("LuckyRace")["x"], $this->config->get("LuckyRace")["y"], $this->config->get("LuckyRace")["z"], $level));
 						$p->sendChat($this->prefix."Битва начнется через 10 секунд..\n".$this->prefix."Разбежитесь по углам!");
 						$this->api->schedule(10*20, [$this, "pvp"], [$p], false);
 					}
