@@ -3,11 +3,11 @@
 /*
 __PocketMine Plugin__
 name=LuckyRace
-description=Exclusive :shushing_face:, only with 2 players works
-version=0.8.1
+description=Works only with 2 players!
+version=1.0
 author=ArkQuark 
 class=LuckyRace
-apiversion=11,12,12.1
+apiversion=12.1
 */
 
 
@@ -20,6 +20,16 @@ class LuckyRace implements Plugin{
     }
 
     public function init(){
+		$this->config = new Config($this->api->plugin->configPath("config")."AIO.yml", CONFIG_YAML, [
+			"info" => "All in one config",
+			"LuckyRace" => [
+				"x" => 127.5,
+				"y" => 70,
+				"z" => 176.5,
+				"level" => "race"
+			]
+		]);
+		
 		$this->api->addHandler("entity.health.change", [$this, "eventHandler"]);
 		$this->api->addHandler("player.block.touch", [$this, "eventHandler"]);
 		$this->api->addHandler("player.death", [$this, "eventHandler"]);
@@ -27,9 +37,8 @@ class LuckyRace implements Plugin{
 
     public function __destruct(){}
 
-
     public function eventHandler(&$data, $event){
-		switch ($event){
+		switch($event){
 			case "entity.health.change":
 				if($this->status == "invincible"){
 					return false;
@@ -43,8 +52,9 @@ class LuckyRace implements Plugin{
 				if($data[0] === "tp @a Arena"){
 					$this->status = "invincible";
 					$players = $this->api->player->getAll();
+					$level = $this->api->level->get($this->config["LuckyRace"]["level"]);
 					foreach($players as $p){
-						$p->teleport(new Vector3(127.5, 70, 176.5));//точные корды арены
+						$p->teleport(new Position($this->config["LuckyRace"]["x"], $this->config["LuckyRace"]["y"], $this->config["LuckyRace"]["z"], $level));
 						$p->sendChat($this->prefix."Битва начнется через 10 секунд..\n".$this->prefix."Разбежитесь по углам!");
 						$this->api->schedule(10*20, [$this, "pvp"], [$p], false);
 					}
