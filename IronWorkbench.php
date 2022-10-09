@@ -4,35 +4,29 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=2.1
+version=2.1.1
 author=DartMiner43
-class=Iron
-apiversion=11,12
+class=IWmain
+apiversion=11,12,12.1
 */
 
-class Iron implements Plugin{
-	
+class IWmain implements Plugin{
 	//Special thx to SkilasticYT
-	
-	private $api;
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
-		$this->server = ServerAPI::request();
 	}
 
 	public function init(){
-		$this->api->addHandler("player.block.touch", array($this, "eventHandle"), 50);
-		$this->api->console->register("crafts", "", array($this, "command"));
+		$this->api->addHandler("player.block.touch", array($this, "eventHandler"), 5);
+		$this->api->console->register("crafts", "", array($this, "commandHandler"));
 		$this->api->ban->cmdWhitelist("crafts");
 	}
 	
 	
-	public function eventHandle($data, $event){
-
-		switch ($event){
+	public function eventHandler($data, $event){
+		switch($event){
 			case "player.block.touch":
-
 				$player = $data["player"];
 				$target = $data["target"];
 				$targetID = $target->getID();
@@ -51,53 +45,53 @@ class Iron implements Plugin{
 				if($targetID != 42) break;
 				if($itemheldCount = 0) break;
 				
-				if($itemheldID == 318){ //Flint -> Gunpowder
+				if($itemheldID == 318){//Flint -> Gunpowder
 					if($itemheldCount = 1) $player->removeItem(318, 0, 1);
 					else $itemheldReflectionCount->setValue($itemheld, --$itemheldCount);
-					$item = $this->api->block->fromString("GUNPOWDER");
+					$item = BlockAPI::getItem(GUNPOWDER, 0, 1);
 					$this->api->entity->drop($dropPos, $item);
 					break;
 				}
-				elseif($itemheldID == 17 and $itemheldMeta == 3){ //Jungle wood -> 4 Jungle planks
+				elseif($itemheldID == 17 and $itemheldMeta == 3){//Jungle wood -> 4 Jungle planks
 					if($itemheldCount = 1) $player->removeItem(17, 3, 1);
 					else $itemheldReflectionCount->setValue($itemheld, --$itemheldCount);
-					$item = $this->api->block->fromString("PLANKS:3");
-					for($i = 4; $i > 0; $i--) $this->api->entity->drop($dropPos, $item, 3);
+					$item = BlockAPI::getItem(PLANKS, 3, 4);
+					$this->api->entity->drop($dropPos, $item, 3);
 					if($data['type'] === 'place') return false;
 					break;
 				}
-				elseif($itemheldID == 406){ //Quartz -> Bone
+				elseif($itemheldID == 406){//Quartz -> Bone
 					if($itemheldCount = 1) $player->removeItem(406, 0, 1);
 					else $itemheldReflectionCount->setValue($itemheld, --$itemheldCount);
-					$item = $this->api->block->fromString("BONE");
+					$item = BlockAPI::getItem(BONE, 0, 1);
 					$this->api->entity->drop($dropPos, $item);
 					break;
 				}
 				elseif($itemheldID == 31 and ($itemheldMeta == 1 or $itemheldMeta == 2)){ //Grass -> Dead bush
 					if($itemheldCount = 1) $player->removeItem(31, $itemheldMeta, 1);
 					else $itemheldReflectionCount->setValue($itemheld, --$itemheldCount);
-					$item = $this->api->block->fromString("DEAD_BUSH");
+					$item = BlockAPI::getItem(DEAD_BUSH, 0, 1);
 					$this->api->entity->drop($dropPos, $item);
 					break;
 				}
-				elseif($itemheldID == 6 and $itemheld->count >= 8) { //8 Saplings -> Grass block
+				elseif($itemheldID == 6 and $itemheldCount >= 8){//8 Saplings -> Grass block
 					if($itemheldCount = 1) $player->removeItem(6, $itemheldMeta, 1);
 					else $itemheldReflectionCount->setValue($itemheld, --$itemheldCount);
-					$item = $this->api->block->fromString("GRASS");
+					$item = BlockAPI::getItem(GRASS, 0, 1);
 					$this->api->entity->drop($dropPos, $item);
 					if($data['type'] === 'place') return false;
 				}
-				elseif($itemheldID == 263){ //Coal -> Inc sac
+				elseif($itemheldID == 263){//Coal -> Inc sac
 					if($itemheldCount = 1) $player->removeItem(263, $itemheldMeta, 1);
 					else $itemheldReflectionCount->setValue($itemheld, --$itemheldCount);
-					$item = $this->api->block->fromString("DYE:0");
+					$item = BlockAPI::getItem(DYE, 0, 1);
 					$this->api->entity->drop($dropPos, $item);
 					break;
 				}
 		}
 	}
 
-	public function command($cmd, $params, $issuer, $alias){
+	public function commandHandler($cmd, $params, $issuer, $alias){
 		$output = "";
 		switch($cmd){
 			case 'crafts';
@@ -107,14 +101,11 @@ Jungle Wood -> 4 Jungle planks
 Quartz -> Bone
 Tall Grass/Fern -> Dead bush
 8 Saplings -> Grass block
-Coal -> Inc sac
-			";
+Coal -> Inc sac";
 		}
 		return $output;
 	}
 
 	public function __destruct(){	
 	}
-	
 }
-?>
