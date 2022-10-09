@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyBlock
 description=New LuckyBlock plugin
-version=1.0.0
+version=1.1.0
 author=ArkQuark
 class=LBmain
 apiversion=12.1
@@ -130,27 +130,30 @@ class LBExecute{
 				$player->sendChat("LuckyBlock whisper to you: This rose for you!~");
 				break;
 			case "ObsidianTrap":
-				(new LBStructure($this->api))->obsidianTrap(((int)$player->entity->x)+.5, $player->entity->y, ((int)$player->entity->z)+.5, $level);
-				$player->teleport(new Vector3(((int)$player->entity->x)+.5, $player->entity->y, ((int)$player->entity->z)+.5), $player->entity->yaw, $player->entity->pitch);
+				$x = ((int)$player->entity->x)+.5;
+				$y = $player->entity->y;
+				$z = ((int)$player->entity->z)+.5;
+				(new LBStructure($this->api))->obsidianTrap($x, $y, $z, $level);
+				$player->teleport(new Vector3($x, $y, $z), $player->entity->yaw, $player->entity->pitch);
 				break;
 			case "IronBarSandTrap":
 				$x = ((int)$player->entity->x)+.5;
 				$y = $player->entity->y;
 				$z = ((int)$player->entity->z)+.5;
 				(new LBStructure($this->api))->ironBarSandTrap($x, $y, $z, $level);
-				$player->teleport(new Vector3($x, $y, $z, $player->entity->yaw, $player->entity->pitch));
+				$player->teleport(new Vector3($x, $y, $z), $player->entity->yaw, $player->entity->pitch);
 				$this->api->schedule(20, [new LBStructure($this->api), "placeSand"], [$x, $y, $z, $level]);
 				break;
 
 			//common
 			case "Tools":
 				foreach(range(272, 275) as $item){
-					$this->drop($item, 40);
+					$this->drop($item, mt_rand(2, 40)/*not a bug now*/, 1, 50);
 				}
 				break;
-			case "RandomAnimal":
+			case "LuckyAnimal":
 				$type = mt_rand(10, 13);
-			case "RandomMonster":
+			case "LuckyMonster":
 				if(!isset($type)) $type = mt_rand(32, 36);
 				$hp = [10 => 4, 11 => 10, 12 => 10, 13 => 8, 32 => 20, 33 => 20, 34 => 20, 35 => 16, 36 => 20];
 				$entity = $this->api->entity->add($level, ENTITY_MOB, $type, [
@@ -176,18 +179,20 @@ class LBExecute{
 					$this->drop($item, 0, mt_rand(1, 3), 25);
 				}
 				break;
-			case "Cake":
-				$this->drop(CAKE_BLOCK);
-				break;
 			case "MobDrop":
 				foreach([287, 288, 289, 334, 352] as $item){
-					$this->drop($item, 0, mt_rand(2, 10), 25);
+					$this->drop($item, 0, mt_rand(2, 10), 30);
 				}
 				$this->drop(341, 0, 1, 5);
 				break;
-			case "Wood":
+			case "WoodStuff":
 				$this->drop(WOOD, mt_rand(0, 2), mt_rand(3, 10));
 				$this->drop(PLANKS, mt_rand(0, 2), mt_rand(5, 19));
+				$this->drop(STICK, 0, mt_rand(2, 8));
+				break;
+			case "StoneStuff":
+				$this->drop(STONE, 0, mt_rand(3, 15));
+				$this->drop(COBBLESTONE, 0, mt_rand(5, 18));
 				break;
 
 			//uncommon
@@ -222,6 +227,9 @@ class LBExecute{
 				foreach(range(0, 15) as $meta){
 					$this->drop(CARPET, $meta, mt_rand(1, 6), 10);
 				}
+				break;
+			case "Cake":
+				$this->drop(CAKE_BLOCK);
 				break;
 
 			//rare
@@ -264,10 +272,7 @@ class LBExecute{
 	}	
 
 	public function drop($id, $meta = 0, $count = 1, $chance = 100){
-		if($chance != 100){
-			if(Utils::chance($chance)) $this->api->entity->drop($this->pos, BlockAPI::getItem($id, $meta, $count));
-		}
-		else $this->api->entity->drop($this->pos, BlockAPI::getItem($id, $meta, $count));
+		if(Utils::chance($chance)) $this->api->entity->drop($this->pos, BlockAPI::getItem($id, $meta, $count));
 	}
 }
 
@@ -276,9 +281,9 @@ class LBRandom{
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap"]; //no todo
-		$this->common = ["Tools", "RandomAnimal", "RandomMonster", "ChainArmor", "Seeds", "Food", "Cake", "MobDrop", "Wood"]; //no todo
-		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet"]; //no todo
-		$this->rare = ["DiamondPickaxe", "Diamonds", "RainbowPillar", "GlowingObsidian"]; //no todo
+		$this->common = ["Tools", "LuckyAnimal", "LuckyMonster", "ChainArmor", "Seeds", "Food", "MobDrop", "WoodStuff", "StoneStuff"]; //no todo
+		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure"
+		$this->rare = ["DiamondPickaxe", "Diamonds", "RainbowPillar", "GlowingObsidian"]; //"WishingWell"
 		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs"]; //"LuckySword(no todo)"
 	}
 
