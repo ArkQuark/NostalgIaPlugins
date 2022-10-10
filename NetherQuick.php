@@ -3,7 +3,7 @@
 __PocketMine Plugin__
 name=NetherQuick
 description=NetherTeleporter
-version=2.5.0
+version=2.5.1
 author=Glitchmaster_PE and wies
 class=NQmain
 apiversion=12.1
@@ -79,14 +79,7 @@ class NQmain implements Plugin{
 			}
 		}
 		elseif($target->getID() == BED_BLOCK and $target->level->getName() == "Nether"){
-			$entity = $this->api->entity->add($target->level, ENTITY_OBJECT, OBJECT_PRIMEDTNT, [
-				"x" => $target->x,
-				"y" => $target->y+0.5,
-				"z" => $target->z,
-				"power" => 5,
-				"fuse" => 1
-			]);
-			$this->api->entity->spawnToAll($entity);
+			(new Explosion(new Position($target->x, $target->y, $target->z, $target->level), 4))->explode();
 			return false;
 		}
 	}
@@ -99,7 +92,7 @@ class NQmain implements Plugin{
 			$lvl = (string)$lvl;
 			
 		$world = $this->api->level->get($lvl);
-		if ($world != false){
+		if($world != false){
 			for(; $y > 0; --$y){
 				$v = new Vector3($x, $y, $z);
 				$b = $world->getBlock($v);
