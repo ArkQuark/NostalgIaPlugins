@@ -3,14 +3,14 @@
 __PocketMine Plugin__
 name=NetherQuick
 description=NetherTeleporter
-version=2.4.1Nostalgic
+version=2.5.0
 author=Glitchmaster_PE and wies
-class=NetherQuick
+class=NQmain
 apiversion=12.1
 */
 
-class NetherQuick implements Plugin{
-	private $api;
+class NQmain implements Plugin{
+
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 		$this->enable = true;
@@ -18,60 +18,76 @@ class NetherQuick implements Plugin{
 	}
 
 	public function init(){
-		if(file_exists('./worlds/Nether/')) $this->api->level->loadLevel("Nether");
-		else{
-			console("Nether world not found");
-			$this->enable = false;
+		$path = join(DIRECTORY_SEPARATOR, [DATA_PATH."worlds", "Nether", ""]);
+		if(file_exists($path)){
+			$this->api->level->loadLevel("Nether");
+			$level = $this->api->level->get("Nether");
+			$level->setTime(17940);
 		}
+		else{
+			console(FORMAT_RED."Nether world not found".FORMAT_RESET);
+			$this->enable = false;
+			return;
+		}
+		$this->api->schedule(60, [$this, "changeTime"], [$level], true);
 		$this->api->addHandler("player.block.touch", [$this, "touchHandler"]);
-		//$this->config = new Config($this->api->plugin->configPath($this) . "config.yml", CONFIG_YAML,);
-		//$this->ognetherReactorIds = [4,4,4,4,4,41,41,41,41,0,0,0,0,4,4,4,4,4,4,4,4,4,0,0,0,0];
-		//$this->ognetherReactorPattern = [[0,-1,0], [1,-1,0], [-1,-1,0], [0,-1,1], [0,-1,-1], [1,-1,1], [1,-1,-1], [-1,-1,1], [-1,-1,-1], [1,0,0], [-1,0,0], [0,0,1], [0,0,-1], [1,0,1], [1,0,-1], [-1,0,1], [-1,0,-1], [0,1,0], [1,1,0], [-1,1,0], [0,1,1], [0,1,-1], [1,1,1], [1,1,-1], [-1,1,1], [-1,1,-1]];
 		$this->netherTeleporterIds = [57, 155];
 		$this->netherTeleporterPattern = [[0, -1, 0], [0, -2, 0]];
-		$this->api->console->register("return", "", array($this, "commandHandler"));		
+		$this->api->console->register("return", "", [$this, "commandHandler"]);		
 		$this->api->ban->cmdWhitelist("return");
 		$this->playerTeleportedLevel = [];
     }
+	
+	public function changeTime($data){
+		$data[0]->setTime(17940);
+	}
 
 	public function commandHandler($cmd, $params, $issuer, $alias){
 		if($cmd == "return"){
 			if(!($issuer instanceof Player)) return $this->prefix."Please run this command in-game";
-			//if(!isset($this->playerTeleportedLevel[$issuer->username])) return $this->prefix."Undefined teleport level";
-			//else{
-			$level = $this->api->level->getDefault();//$this->playerTeleportedLevel[$issuer->username];
-			$issuer->teleport($level->getSpawn());
+			if(!isset($this->playerTeleportedLevel[$issuer->username])) {
+				$level = $this->api->level->getDefault();
+				$issuer->teleport($level->getSpawn());
+			}
+			else{
+				$level = $this->playerTeleportedLevel[$issuer->username];
+				$issuer->teleport($level->getSpawn());
+			}
 			$issuer->sendChat($this->prefix."Returned to overworld");
-			//}
 		}
 	}
 
 	public function touchHandler($data){
 		if(!$this->enable) return;
-		if($data["target"]->getID() === 247){
+		$target = $data["target"];
+		if($target->getID() === 247){
 		    $player = $data["player"];
-			$x = $data["target"]->x;
-			$y = $data["target"]->y;
-			$z = $data["target"]->z;
+			$x = $target->x;
+			$y = $target->y;
+			$z = $target->z;
 			$level = $player->level;
-			//$blocks = [];
-			$blocks2 = [];
-			/*foreach($this->ognetherReactorPattern as $val){
-				$blocks[] = $level->getBlock(new Vector3($x + $val[0], $y + $val[1], $z + $val[2]))->getID();
-			}*/
+			$blocks = [];
 			foreach($this->netherTeleporterPattern as $val){
-				$blocks2[] = $level->getBlock(new Vector3($x + $val[0], $y + $val[1], $z + $val[2]))->getID();
+				$blocks[] = $level->getBlock(new Vector3($x + $val[0], $y + $val[1], $z + $val[2]))->getID();
 			}
-			if($this->netherTeleporterIds == $blocks2){
+			if($this->netherTeleporterIds == $blocks){
 				$safespawn = $this->getSafeZone($x, $y, $z, "Nether");
 				$this->playerTeleportedLevel[$player->username] = $level;
 				$player->teleport($safespawn);
 				$player->sendChat($this->prefix."You have been teleported to Nether world");
 				$player->sendChat($this->prefix."If you want return just /return");
 			}
-			/*elseif($this->ognetherReactorIds == $blocks){
-				return false;
-			}*/
+		}
+		elseif($target->getID() == BED_BLOCK and $target->level->getName() == "Nether"){
+			$entity = $this->api->entity->add($target->level, ENTITY_OBJECT, OBJECT_PRIMEDTNT, [
+				"x" => $target->x,
+				"y" => $target->y+0.5,
+				"z" => $target->z,
+				"power" => 5,
+				"fuse" => 1
+			]);
+			$this->api->entity->spawnToAll($entity);
+			return false;
 		}
 	}
 	
@@ -109,5 +125,3 @@ class NetherQuick implements Plugin{
 
 	public function __destruct(){}
 }
-?>
-
