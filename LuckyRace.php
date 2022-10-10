@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyRace
 description=Works only with 2 players!
-version=1.0.1
+version=1.0.2
 author=ArkQuark 
 class=LRmain
 apiversion=12.1
@@ -20,7 +20,7 @@ class LRmain implements Plugin{
     }
 
     public function init(){
-		$path = join(DIRECTORY_SEPARATOR, [DATA_PATH . "plugins/configs", ""]);
+		$path = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "configs", ""]);
 		if(!file_exists($path)){
 			mkdir($path, 0777);
 		}

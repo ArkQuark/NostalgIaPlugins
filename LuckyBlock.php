@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyBlock
 description=New LuckyBlock plugin
-version=1.1.1
+version=1.1.2
 author=ArkQuark
 class=LBmain
 apiversion=12.1
@@ -18,14 +18,21 @@ class LBmain implements Plugin{
 	}
 	
 	public function init(){
-		$this->config = new Config($this->api->plugin->configPath($this)."config.yml", CONFIG_YAML, [
-			"//in seconds",
-			"spawnTime" => 300,
-			"enableSpawn" => true,
-			"enablePlugin" => true,
-			"dropAnnounce" => true,
-			"openAnnounce" => true
+		$path = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "configs", ""]);
+		if(!file_exists($path)){
+			mkdir($path, 0777);
+		}
+		$this->configfile = new Config($path."AIO.yml", CONFIG_YAML, [
+			"info" => "All in one config",
+			"LuckyBlock" => [
+				"spawnTime" => 300,
+				"enableSpawn" => true,
+				"enablePlugin" => true,
+				"dropAnnounce" => true,
+				"openAnnounce" => true
+			]
 		]);
+		$this->config = $this->configfile->get("LuckyBlock");
 		$this->api->schedule(0, [$this, "scheduleSpawn"], [], false);
 		$this->api->addHandler("player.block.break", array($this, "handle"), 5);
 	}
@@ -38,7 +45,7 @@ class LBmain implements Plugin{
 			if($player->getSlot($player->slot)->isHoe()) return true;
 
 			$rand = (new LBRandom($this->api))->randomChoice();
-			if($this->config->get("openAnnounce")) $this->api->chat->broadcast(" - $player открыл LuckyBlock и ему выпало [".ucfirst($rand[1])."] ".$rand[0]." - ");
+			if($this->config["openAnnounce"]) $this->api->chat->broadcast(" - $player открыл LuckyBlock и ему выпало [".ucfirst($rand[1])."] ".$rand[0]." - ");
 			$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new AirBlock(), true);
 			$this->api->block->blockUpdate(new Position($target->x, $target->y, $target->z, $target->level));
 			(new LBExecute($this->api))->executeChoice($rand[0], $data);
@@ -47,7 +54,7 @@ class LBmain implements Plugin{
 	}
 
 	public function scheduleSpawn(){
-		if($this->config->get("enableSpawn")) $this->api->schedule($this->config->get("spawnLuckyBlock")*20, [$this, "spawnLuckyBlock"], [], true);
+		if($this->config["enableSpawn"]) $this->api->schedule($this->config["spawnTime"]*20, [$this, "spawnLuckyBlock"], [], true);
 	}
 	
 	public function spawnLuckyBlock(){
@@ -79,7 +86,7 @@ class LBmain implements Plugin{
 
 		$level->setBlock(new Vector3($randomX, $y, $randomZ), new SpongeBlock());
 		//console("LuckyBlock spawned in $randomX, $y, $randomZ");
-		if($this->config->get("dropAnnounce")){
+		if($this->config["dropAnnounce"]){
 			foreach($o as $player){
 				$player->sendChat("LuckyBlock упал на карте, отыщите его!");
 			}
@@ -280,11 +287,11 @@ class LBRandom{
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
-		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap"]; //no todo
+		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap"]; //CobwebTrap
 		$this->common = ["Tools", "LuckyAnimal", "LuckyMonster", "ChainArmor", "Seeds", "Food", "MobDrop", "WoodStuff", "StoneStuff"]; //no todo
-		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure"
+		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure", Spawner
 		$this->rare = ["DiamondPickaxe", "Diamonds", "GlowingObsidian"]; //"WishingWell"
-		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs", "RainbowPillar"]; //"LuckySword(no todo)"
+		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs", "RainbowPillar"]; //"LuckySword(no todo)", IllegalStuff
 	}
 
 	public function randomChoice(){
@@ -403,18 +410,18 @@ class LBStructure{
 	public function fallingSand($x, $y, $z, $level){
 		$entities = [];
 		$data = [
-		["x" => $x, "y" => $y+6, "z" => $z-1, "Tile" => SAND], ["x" => $x, "y" => $y+7, "z" => $z-1, "Tile" => SAND], ["x" => $x, "y" => $y+8, "z" => $z-1, "Tile" => SAND],
-		["x" => $x-1, "y" => $y+6, "z" => $z-1, "Tile" => SAND], ["x" => $x-1, "y" => $y+7, "z" => $z-1, "Tile" => SAND], ["x" => $x-1, "y" => $y+8, "z" => $z-1, "Tile" => SAND],
-		["x" => $x+1, "y" => $y+6, "z" => $z-1, "Tile" => SAND], ["x" => $x+1, "y" => $y+7, "z" => $z-1, "Tile" => SAND], ["x" => $x+1, "y" => $y+8, "z" => $z-1, "Tile" => SAND],
-		["x" => $x, "y" => $y+6, "z" => $z, "Tile" => SAND], ["x" => $x, "y" => $y+7, "z" => $z, "Tile" => SAND], ["x" => $x, "y" => $y+8, "z" => $z, "Tile" => SAND],
-		["x" => $x-1, "y" => $y+6, "z" => $z, "Tile" => SAND], ["x" => $x-1, "y" => $y+7, "z" => $z, "Tile" => SAND], ["x" => $x-1, "y" => $y+8, "z" => $z, "Tile" => SAND],
-		["x" => $x+1, "y" => $y+6, "z" => $z, "Tile" => SAND], ["x" => $x+1, "y" => $y+7, "z" => $z, "Tile" => SAND], ["x" => $x+1, "y" => $y+8, "z" => $z, "Tile" => SAND],
-		["x" => $x, "y" => $y+6, "z" => $z+1, "Tile" => SAND], ["x" => $x, "y" => $y+7, "z" => $z+1, "Tile" => SAND], ["x" => $x, "y" => $y+8, "z" => $z+1, "Tile" => SAND],
-		["x" => $x-1, "y" => $y+6, "z" => $z+1, "Tile" => SAND], ["x" => $x-1, "y" => $y+7, "z" => $z+1, "Tile" => SAND], ["x" => $x-1, "y" => $y+8, "z" => $z+1, "Tile" => SAND],
-		["x" => $x+1, "y" => $y+6, "z" => $z+1, "Tile" => SAND], ["x" => $x+1, "y" => $y+7, "z" => $z+1, "Tile" => SAND], ["x" => $x+1, "y" => $y+8, "z" => $z+1, "Tile" => SAND]
+		["x" => $x, "y" => $y+6, "z" => $z-1], ["x" => $x, "y" => $y+7, "z" => $z-1], ["x" => $x, "y" => $y+8, "z" => $z-1],
+		["x" => $x-1, "y" => $y+6, "z" => $z-1], ["x" => $x-1, "y" => $y+7, "z" => $z-1], ["x" => $x-1, "y" => $y+8, "z" => $z-1],
+		["x" => $x+1, "y" => $y+6, "z" => $z-1], ["x" => $x+1, "y" => $y+7, "z" => $z-1], ["x" => $x+1, "y" => $y+8, "z" => $z-1],
+		["x" => $x, "y" => $y+6, "z" => $z], ["x" => $x, "y" => $y+7, "z" => $z], ["x" => $x, "y" => $y+8, "z" => $z],
+		["x" => $x-1, "y" => $y+6, "z" => $z], ["x" => $x-1, "y" => $y+7, "z" => $z], ["x" => $x-1, "y" => $y+8, "z" => $z],
+		["x" => $x+1, "y" => $y+6, "z" => $z], ["x" => $x+1, "y" => $y+7, "z" => $z], ["x" => $x+1, "y" => $y+8, "z" => $z],
+		["x" => $x, "y" => $y+6, "z" => $z+1], ["x" => $x, "y" => $y+7, "z" => $z+1], ["x" => $x, "y" => $y+8, "z" => $z+1],
+		["x" => $x-1, "y" => $y+6, "z" => $z+1], ["x" => $x-1, "y" => $y+7, "z" => $z+1], ["x" => $x-1, "y" => $y+8, "z" => $z+1],
+		["x" => $x+1, "y" => $y+6, "z" => $z+1], ["x" => $x+1, "y" => $y+7, "z" => $z+1], ["x" => $x+1, "y" => $y+8, "z" => $z+1]
 		];
 		foreach($data as $d){
-			array_push($entities, $this->api->entity->add($level, ENTITY_FALLING, FALLING_SAND, $d));
+			array_push($entities, $this->api->entity->add($level, ENTITY_FALLING, FALLING_SAND, $d+["Tile" => SAND]));
 		}
 		foreach($entities as $e){
 			$this->api->entity->spawnToAll($e);
@@ -430,10 +437,10 @@ class LBStructure{
 
 		$entities = [];
 		$data = [
-		["x" => $x, "y" => $y+6, "z" => $z, "Tile" => SAND], ["x" => $x, "y" => $y+7, "z" => $z, "Tile" => SAND], ["x" => $x, "y" => $y+8, "z" => $z, "Tile" => SAND],
+		["x" => $x, "y" => $y+6, "z" => $z], ["x" => $x, "y" => $y+7, "z" => $z], ["x" => $x, "y" => $y+8, "z" => $z]
 		];
 		foreach($data as $d){
-			array_push($entities, $this->api->entity->add($level, ENTITY_FALLING, FALLING_SAND, $d));
+			array_push($entities, $this->api->entity->add($level, ENTITY_FALLING, FALLING_SAND, $d+["Tile" => SAND]));
 		}
 		foreach($entities as $e){
 			$this->api->entity->spawnToAll($e);
