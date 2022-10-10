@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyBlock
 description=New LuckyBlock plugin
-version=1.1.2
+version=1.1.3
 author=ArkQuark
 class=LBmain
 apiversion=12.1
@@ -34,11 +34,11 @@ class LBmain implements Plugin{
 		]);
 		$this->config = $this->configfile->get("LuckyBlock");
 		$this->api->schedule(0, [$this, "scheduleSpawn"], [], false);
-		$this->api->addHandler("player.block.break", array($this, "handle"), 5);
+		$this->api->addHandler("player.block.break", [$this, "handle"]);
 	}
 
 	public function handle(&$data, $event){
-		if(!$this->config->get("enablePlugin")) return;
+		if(!$this->config["enablePlugin"]) return;
 		$player = $data['player'];
 		$target = $data['target'];
 		if($target->getID() === SPONGE){
@@ -151,6 +151,12 @@ class LBExecute{
 				$player->teleport(new Vector3($x, $y, $z), $player->entity->yaw, $player->entity->pitch);
 				$this->api->schedule(20, [new LBStructure($this->api), "placeSand"], [$x, $y, $z, $level]);
 				break;
+			case "CobwebTrap":
+				$x = ((int)$player->entity->x)+.5;
+				$y = $player->entity->y;
+				$z = ((int)$player->entity->z)+.5;
+				(new LBStructure($this->api))->cobwebTrap($x, $y, $z, $level);
+				break;
 
 			//common
 			case "Tools":
@@ -195,7 +201,7 @@ class LBExecute{
 			case "WoodStuff":
 				$this->drop(WOOD, mt_rand(0, 2), mt_rand(3, 10));
 				$this->drop(PLANKS, mt_rand(0, 2), mt_rand(5, 19));
-				$this->drop(STICK, 0, mt_rand(2, 8));
+				$this->drop(STICK, 0, mt_rand(2, 8), 50);
 				break;
 			case "StoneStuff":
 				$this->drop(STONE, 0, mt_rand(3, 15));
@@ -287,15 +293,15 @@ class LBRandom{
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
-		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap"]; //CobwebTrap
+		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap", "CobwebTrap"]; //no todo
 		$this->common = ["Tools", "LuckyAnimal", "LuckyMonster", "ChainArmor", "Seeds", "Food", "MobDrop", "WoodStuff", "StoneStuff"]; //no todo
-		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure", Spawner
+		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure", "Spawner"
 		$this->rare = ["DiamondPickaxe", "Diamonds", "GlowingObsidian"]; //"WishingWell"
-		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs", "RainbowPillar"]; //"LuckySword(no todo)", IllegalStuff
+		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs", "RainbowPillar"]; //"LuckySword(no todo)", "IllegalStuff"
 	}
 
 	public function randomChoice(){
-		//return ["IronBarSandTrap", "Test"];
+		//return ["CobwebTrap", "Test"];
 		$randRarity = $this->randomRarity();
 		switch($randRarity){
 			case "bad":
@@ -328,7 +334,27 @@ class LBStructure{
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 	}
-
+	
+	public function cobwebTrap($x, $y, $z, $level){
+		$data = [
+			[$x-1, $y, $z-1], [$x-1, $y, $z], [$x-1, $y, $z+1],
+			[$x, $y, $z-1], [$x, $y, $z], [$x, $y, $z+1],
+			[$x+1, $y, $z-1], [$x+1, $y, $z], [$x+1, $y, $z+1],
+			
+			[$x-1, $y+1, $z-1], [$x-1, $y+1, $z], [$x-1, $y+1, $z+1],
+			[$x, $y+1, $z-1], [$x, $y+1, $z], [$x, $y+1, $z+1],
+			[$x+1, $y+1, $z-1], [$x+1, $y+1, $z], [$x+1, $y+1, $z+1],
+			
+			[$x-1, $y+2, $z-1], [$x-1, $y+2, $z], [$x-1, $y+2, $z+1],
+			[$x, $y+2, $z-1], [$x, $y+2, $z], [$x, $y+2, $z+1],
+			[$x+1, $y+2, $z-1], [$x+1, $y+2, $z], [$x+1, $y+2, $z+1]
+		];
+		
+		foreach($data as $block){
+			$level->setBlock(new Vector3($block[0], $block[1], $block[2]), BlockAPI::get(COBWEB), true);
+		}
+	}
+	
 	public function ironBarSandTrap($x, $y, $z, $level){
 		$data = [
 			[$x-1, $y-1, $z-1, STONE_BRICKS], [$x-1, $y-1, $z, STONE_BRICKS], [$x-1, $y-1, $z+1, STONE_BRICKS],
