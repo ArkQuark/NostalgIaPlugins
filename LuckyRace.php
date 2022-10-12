@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyRace
 description=Plugin for LuckyRace
-version=1.1.0
+version=1.2.0
 author=ArkQuark 
 class=LRmain
 apiversion=12.1
@@ -66,6 +66,11 @@ class LRmain implements Plugin{
 					foreach($players as $p){
 						$p->teleport(new Position($this->config["x"], $this->config["y"], $this->config["z"], $level));
 					}
+				}
+				elseif($dataSign[0] == "spawnpoint ~ ~ ~"){
+					$p = $data['player'];
+					$pos = new Position($p->x, $p->y, $p->z, $p->level);
+					$p->setSpawn($pos);
 				}
 				break;
 			case "player.death":

@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=LuckyBlock
 description=New LuckyBlock plugin
-version=1.1.3
+version=1.2.0
 author=ArkQuark
 class=LBmain
 apiversion=12.1
@@ -244,6 +244,9 @@ class LBExecute{
 			case "Cake":
 				$this->drop(CAKE_BLOCK);
 				break;
+			case "OreStructure":
+				(new LBStructure($this->api))->oreStructure($x, $y, $z, $level);
+				break;
 
 			//rare
 			case "DiamondPickaxe":
@@ -282,7 +285,7 @@ class LBExecute{
 				console("Undefined choice: $choice!");
 				break;
 		}
-	}	
+	}
 
 	public function drop($id, $meta = 0, $count = 1, $chance = 100){
 		if(Utils::chance($chance)) $this->api->entity->drop($this->pos, BlockAPI::getItem($id, $meta, $count));
@@ -295,13 +298,13 @@ class LBRandom{
 		$this->api = $api;
 		$this->bad = ["Harm", "TNT", "FallingSand", "RomanticRose", "ObsidianTrap", "IronBarSandTrap", "CobwebTrap"]; //no todo
 		$this->common = ["Tools", "LuckyAnimal", "LuckyMonster", "ChainArmor", "Seeds", "Food", "MobDrop", "WoodStuff", "StoneStuff"]; //no todo
-		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake"]; //"OreStructure", "Spawner"
+		$this->uncommon = ["BonusChest", "Ingots", "IronArmor", "NetherStuff", "Carpet", "Cake", "OreStructure"]; //"Spawner"
 		$this->rare = ["DiamondPickaxe", "Diamonds", "GlowingObsidian"]; //"WishingWell"
 		$this->legendary = ["InfoUpdate", "UnstableNetherReactor", "SpawnEggs", "RainbowPillar"]; //"LuckySword(no todo)", "IllegalStuff"
 	}
 
 	public function randomChoice(){
-		//return ["CobwebTrap", "Test"];
+		//return ["OreStructure", "Test"];
 		$randRarity = $this->randomRarity();
 		switch($randRarity){
 			case "bad":
@@ -333,6 +336,67 @@ class LBStructure{
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
+	}
+	
+	public function oreStructure($x, $y, $z, $level){
+		$data = [
+			0 => [
+				[$x-2, $z-2, 40], [$x-2, $z-1, 40], [$x-2, $z, 40], [$x-2, $z+1, 40], [$x-2, $z+2, 40],
+				[$x-1, $z-2, 40], [$x-1, $z-1], [$x-1, $z], [$x-1, $z+1], [$x-1, $z+2, 40],
+				[$x, $z-2, 40], [$x, $z-1], [$x, $z], [$x, $z+1], [$x, $z+2, 40],
+				[$x+1, $z-2, 40], [$x+1, $z-1], [$x+1, $z], [$x+1, $z+1], [$x+1, $z+2, 40],
+				[$x+2, $z-2, 40], [$x+2, $z-1, 40], [$x+2, $z, 40], [$x+2, $z+1, 40], [$x+2, $z+2, 40]
+			],
+			1 => [	
+				[$x-2, $z-2, 15], [$x-2, $z-1, 15], [$x-2, $z, 15], [$x-2, $z+1, 15], [$x-2, $z+2, 15],
+				[$x-1, $z-2, 15], [$x-1, $z-1], [$x-1, $z], [$x-1, $z+1], [$x-1, $z+2, 15],
+				[$x, $z-2, 15], [$x, $z-1], [$x, $z], [$x, $z+1], [$x, $z+2, 15],
+				[$x+1, $z-2, 15], [$x+1, $z-1], [$x+1, $z], [$x+1, $z+1], [$x+1, $z+2, 15],
+				[$x+2, $z-2, 15], [$x+2, $z-1, 15], [$x+2, $z, 15], [$x+2, $z+1, 15], [$x+2, $z+2, 15]
+			],
+			2 => [
+				[$x-1, $z-1, 50], [$x-1, $z, 75], [$x-1, $z+1, 50],
+				[$x, $z-1, 75], [$x, $z], [$x, $z+1, 75],
+				[$x+1, $z-1, 50], [$x+1, $z, 75], [$x+1, $z+1, 50]
+			],
+			3 => [
+				[$x-1, $z-1, 40], [$x-1, $z, 50], [$x-1, $z+1, 40],
+				[$x, $z-1, 50], [$x, $z], [$x, $z+1, 50],
+				[$x+1, $z-1, 40], [$x+1, $z, 50], [$x+1, $z+1, 40]
+			],
+			4 => [
+				[$x-1, $z, 25],
+				[$x, $z-1, 25], [$x, $z, 50], [$x, $z+1, 25],
+				[$x+1, $z, 25]
+			],
+			5 => [
+				[$x, $z, 25]
+			]
+		];
+		
+		foreach($data as $addY => $array){
+			$blockY = $y + $addY;
+			foreach($array as $block){
+				if(!isset($block[2])) $block[2] = 100;
+				$ore = $this->randOre();
+				if(Utils::chance($block[2])){
+					if($level->getBlock(new Vector3($block[0], $blockY-1, $block[1]))->getID() != AIR){
+						$level->setBlock(new Vector3($block[0], $blockY, $block[1]), BlockAPI::get($ore));
+						$this->api->block->blockUpdate(new Position($block[0], $blockY, $block[1], $level));
+					}
+				}
+			}
+		}
+	}
+	
+	public function randOre(){
+		$rand = Utils::randomFloat() * 100;
+		if($rand <= 10) return DIAMOND_ORE;
+		elseif($rand <= 25) return LAPIS_ORE;
+		elseif($rand <= 40) return REDSTONE_ORE;
+		elseif($rand <= 60) return GOLD_ORE;
+		elseif($rand <= 80) return IRON_ORE;
+		else return COAL_ORE;
 	}
 	
 	public function cobwebTrap($x, $y, $z, $level){
