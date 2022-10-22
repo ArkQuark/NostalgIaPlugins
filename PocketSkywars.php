@@ -4,7 +4,7 @@
  __PocketMine Plugin__
 name=PocketSkywars
 description=Simple Skywars plugin.
-version=0.8.1 r1.2 build1
+version=0.8.1 r1.2
 apiversion=12.1
 author=Omattyao | ArkQuark
 class=PocketSkywars
@@ -17,17 +17,17 @@ define("LINE_BREAK", 45);
 class PocketSkywars implements Plugin{
 	protected $api, $path, $config, $kit, $db, $players, $score, $field;
 	
-	private $backup = array("world" => array(), "chest" => array());
-	private $switch = array();
-	private $schedule = array();
+	private $backup = ["world" => []];
+	private $switch = [];
+	private $schedule = [];
 	private $count_id = 0;
-	private $s_id = array(); //schedule_id
+	private $s_id = []; //schedule_id
 	protected $status = false;
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->server = ServerAPI::request();
 		$this->api = $api;
-		$this->select = array();
+		$this->select = [];
 	}
 
 	public function init(){
@@ -53,10 +53,10 @@ class PocketSkywars implements Plugin{
 		"console.command.spawn" => false];
 		$this->addEventHandler($event);
 		
-		$this->api->console->register("sky", "PocketSkywars command.", array($this, "command"));
-		$this->api->console->register("kit", "PocketSkywars command.", array($this, "command"));
-		$this->api->console->register("refill", "Turn on or off chest refill", array($this, "command"));
-		$this->api->console->register("surv", "PocketSkywars command", array($this, "command"));
+		$this->api->console->register("sky", "PocketSkywars command.", [$this, "command"]);
+		$this->api->console->register("kit", "PocketSkywars command.", [$this, "command"]);
+		$this->api->console->register("refill", "Turn on or off chest refill", [$this, "command"]);
+		$this->api->console->register("surv", "PocketSkywars command", [$this, "command"]);
 		$this->api->ban->cmdWhitelist("kit");
 		$this->api->ban->cmdWhitelist("sky");
 		$this->api->ban->cmdWhitelist("surv");
@@ -68,15 +68,15 @@ class PocketSkywars implements Plugin{
 		foreach($players as $player){
 			if($player->gamemode !== 0){
 				$player->sendChat("[Skywars] Changing gamemode to survival.");
-				$this->schedule(2, "kick", array($player, "gamemode change"));
+				$this->schedule(2, "kick", [$player, "gamemode change"]);
 			}
 		}
 	}
 
-	public function addEventHandler($array = array()){
+	public function addEventHandler($array = []){
 		foreach($array as $handle => $event){
-			if($event === true) $this->api->event($handle, array($this, "handle"));
-			else $this->api->addHandler($handle, array($this, "handle"), 5);
+			if($event === true) $this->api->event($handle, [$this, "handle"]);
+			else $this->api->addHandler($handle, [$this, "handle"], 5);
 		}
 	}
 
@@ -117,7 +117,7 @@ class PocketSkywars implements Plugin{
 					$player->blocked = true;
 					$player->teleport($this->getLobby());
 					$player->sendChat("You fall into void. You will be kicked!");
-					$this->schedule(2, "kick", array($player, "void"));
+					$this->schedule(2, "kick", [$player, "void"]);
 				}
 				break;
 			case "player.join":
@@ -160,7 +160,7 @@ class PocketSkywars implements Plugin{
 				$data->set("health", 20);
 				if($this->switch["first.spawn"] instanceof Position){
 					$p = $this->switch["first.spawn"];
-					$data->set("position", array("x" => $p->x, "y" => $p->y, "z" => $p->z, "level" => $p->level->getName()));
+					$data->set("position", ["x" => $p->x, "y" => $p->y, "z" => $p->z, "level" => $p->level->getName()]);
 				}
 				break;
 			case "player.death":
@@ -210,32 +210,31 @@ class PocketSkywars implements Plugin{
 				if($this->switch["backup"])	$this->backupLevel("break", $data);
 				break;
 			case "player.block.touch":
-				if($this->status == false or $this->status == "ready" or $this->status == "lobby" or $this->status == "finish"){
+				if($this->status != "game" or $this->status != "invincible"){
+					if(isset($this->select[$data["player"]->username])){
+						if($data['target']->getID() === CHEST){
+							$target = $data['target'];
+							$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "chests.yml");
+							$pos = ['x' => $target->x, 'y' => $target->y, 'z' => $target->z, 'level' => $target->level->getName()];
+							array_push($cfg, ["pos" => $pos, "rarity" => $this->select[$data["player"]->username]['rarity']]);
+							$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."chests.yml", $cfg);
+							$data["player"]->sendChat("[Skywars] Chest position captured");
+							unset($this->select[$data["player"]->username]);
+							unset($this->select[$data["player"]->username]['rarity']);
+						}
+						else $data["player"]->sendChat("[Skywars] You need to tap a chest.");
+						return false;
+					}
+					
 					if($this->status == false and $this->api->ban->isOp($data['player']->username)) return true;
-					return false;
+					elseif($this->status == false) return false;
 				}
-				if($this->status == 'play' or $this->status == 'invincible'){
+				else{
 					if($data['target']->y >= 119){
 						$data['player']->sendChat("You can't build here! (Y > 120)");
 						return false;
 					}
-					return true;
-				}
-				
-				//$data['player']->sendChat($data['player']->getSlot($data['player']->slot)->getName());
-				
-				if(isset($this->select[$data["player"]->username])){
-					if($data['target']->getID() === CHEST){
-						$target = $data['target'];
-						$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "chests.yml");
-						$pos = array('x' => $target->x, 'y' => $target->y, 'z' => $target->z, 'level' => $target->level->getName());
-						array_push($cfg, array("pos" => $pos, "rarity" => $this->select[$data["player"]->username]['rarity']));
-						$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."chests.yml", $cfg);
-						$data["player"]->sendChat("[Skywars] Chest position captured");
-						unset($this->select[$data["player"]->username]);
-						unset($this->select[$data["player"]->username]['rarity']);
-					}
-					else $data["player"]->sendChat("[Skywars] You need to tap a chest.");
+					else return true;
 				}
 				break;
 			case "tile.update":
@@ -289,7 +288,7 @@ class PocketSkywars implements Plugin{
 					$reason = "accident";
 					$this->score[$dead]["cause"] = $data["cause"];
 				}
-				$this->schedule(1, "kick", array($dead, $reason));
+				$this->schedule(1, "kick", [$dead, $reason]);
 				$surv = $this->getSurvival();
 				if($surv > 1){
 					$this->broadcast("[Skywars] ".$surv." players remaining.");
@@ -322,13 +321,13 @@ class PocketSkywars implements Plugin{
 		}
 	}
 
-	public function command($cmd, $params, $issuer, $alias){
-		if($issuer instanceof Player) $output = $this->playerCommand($cmd, $params, $issuer, $alias);
-		else $output = $this->consoleCommand($cmd, $params, $issuer, $alias);
+	public function command($cmd, $args, $issuer, $alias){
+		if($issuer instanceof Player) $output = $this->playerCommand($cmd, $args, $issuer, $alias);
+		else $output = $this->consoleCommand($cmd, $args, $issuer, $alias);
 		return $output;
 	}
 
-	public function consoleCommand($cmd, $params, $issuer, $alias){
+	public function consoleCommand($cmd, $args, $issuer, $alias){
 		$output = "";
 		switch($cmd){
 			case "surv":
@@ -348,7 +347,7 @@ class PocketSkywars implements Plugin{
 				$output .= "Please run this command in game.";
 				break;
 			case "sky":
-				$mode = array_shift($params);
+				$mode = array_shift($args);
 				switch($mode){
 					case "run":
 						if($this->status !== false){
@@ -359,7 +358,7 @@ class PocketSkywars implements Plugin{
 						//console(var_dump($this->chestRandLoot())); 								   //test for code problems
 						//$this->chestRefill();
 						$this->api->chat->broadcast("[Skywars] Skywars server has been running!");
-						$field = array_shift($params);
+						$field = array_shift($args);
 						if(empty($field)) $field = false;
 						$this->gameReady($field);
 						break;
@@ -379,7 +378,7 @@ class PocketSkywars implements Plugin{
 						$this->gameStop();
 						break;
 					case "marker":
-						$bool = array_shift($params);
+						$bool = array_shift($args);
 						if(!$this->formatBool($bool)){
 							$output .= "Usage: /sky marker <on | off>\n";
 							break;
@@ -405,9 +404,9 @@ class PocketSkywars implements Plugin{
 						$this->showRecords($output);
 						break;
 					case "settime":
-						$mode =(string) array_shift($params);
-						$time =(int) array_shift($params);
-						if(empty($time) or $time <= 0 or !in_array($mode, array("lobby", "invincible", "play"))){
+						$mode = (string) array_shift($args);
+						$time = (int) array_shift($args);
+						if(empty($time) or $time <= 0 or !in_array($mode, ["lobby", "invincible", "play"])){
 							$output .= "Usage: /sky settime <status> <time(sec)>\n<status> ... \"ready\" or \"invincible\" or \"play\"\n";
 							break;
 						}
@@ -418,8 +417,8 @@ class PocketSkywars implements Plugin{
 						break;
 					case "setday":
 					case "locktime":
-						$mode = array_shift($params);
-						if(in_array($mode, array("day", "night", "sunset", "sunrise"))){
+						$mode = array_shift($args);
+						if(in_array($mode, ["day", "night", "sunset", "sunrise"])){
 							$this->config["lock-time"] = $mode;
 							$this->writeConfig();
 							$output .= "[Skywars] Setted lock-time to \"$mode\".\n";
@@ -428,7 +427,7 @@ class PocketSkywars implements Plugin{
 						}
 						break;
 					case "setprize":
-						$amount =(int) array_shift($params);
+						$amount = (int) array_shift($args);
 						if($amount = "" or $amount < 0){
 							$output .= "Usage: /sky setprize <amount>\n";
 							break;
@@ -440,7 +439,7 @@ class PocketSkywars implements Plugin{
 					case "worldprotect":
 					case "protection":
 					case "protect":
-						$bool = array_shift($params);
+						$bool = array_shift($args);
 						if(!$this->formatBool($bool)){
 							$output .= "[Skywars] Usage: /sky protect <on | off>\n";
 							break;
@@ -457,8 +456,8 @@ class PocketSkywars implements Plugin{
 						}
 						break;
 					case "addfield":
-						$field =(string) array_shift($params);
-						$levelname =(string) array_shift($params);
+						$field = (string) array_shift($args);
+						$levelname = (string) array_shift($args);
 						if(empty($field)){
 							$output .= "[Skywars] Usage: /sky addfield <field name>\n";
 							break;
@@ -474,7 +473,7 @@ class PocketSkywars implements Plugin{
 							$output .= FORMAT_YELLOW."[Skywars] \"".$field."\" already exists!\n";
 							break;
 						}
-						$this->config["field"][$field] = array("lobby" => array(), "start" => array(), "level" => $levelname);
+						$this->config["field"][$field] = ["lobby" => [], "start" => [], "level" => $levelname];
 						$this->writeConfig();
 						$output .= FORMAT_AQUA."[Skywars] Adding \"".$field."\" field succeeded! Next, you must set a lobby point and start points of the field.\n";
 						$output .= "[Skywars] Usage: /sky setlobby <field name> <x> <y> <z>\n";
@@ -482,7 +481,7 @@ class PocketSkywars implements Plugin{
 						$output .= "[Skywars] Usage: /sky rmpoint <field name> <number>\n";
 						break;
 					case "rmfield":
-						$field =(string) array_shift($params);
+						$field = (string) array_shift($args);
 						if(!$this->fieldExists($field)){
 							$output .= FORMAT_YELLOW."[Skywars] \"".$field."\" doesn't exist!\n";
 							break;
@@ -492,7 +491,7 @@ class PocketSkywars implements Plugin{
 						$this->writeConfig();
 						break;
 					case "fieldinfo":
-						$field =(string) array_shift($params);
+						$field = (string) array_shift($args);
 						if(!$this->fieldExists($field)){
 							$output .= FORMAT_YELLOW."[Skywars] \"".$field."\" doesn't exist!\n";
 							break;
@@ -511,7 +510,7 @@ class PocketSkywars implements Plugin{
 							$output .= "[Skywars] This command is unavailable now.\n";
 							break;
 						}
-						$this->editField($mode, $params, $output);
+						$this->editField($mode, $args, $output);
 						break;
 					case "debug":
 						var_dump($this->switch);
@@ -532,13 +531,13 @@ class PocketSkywars implements Plugin{
 				}
 				break;
 			case "kit":
-				$mode = array_shift($params);
+				$mode = array_shift($args);
 				switch($mode){
 					case "addkit":
 					case "add":
-						$name =(String) array_shift($params);
-						$price = array_shift($params);
-						$level = array_shift($params);
+						$name = (string) array_shift($args);
+						$price = array_shift($args);
+						$level = array_shift($args);
 						if($this->kit->add($name, $price, $level) === true){
 							$output .= FORMAT_DARK_AQUA."[Skywars] Added $name kit!\n";
 						}else{
@@ -549,7 +548,7 @@ class PocketSkywars implements Plugin{
 					case "remove":
 					case "rmkit":
 					case "rm":
-						$kitname = trim(array_shift($params));
+						$kitname = trim(array_shift($args));
 						if($this->isAlnum($kitname) === false){
 							$output .= FORMAT_YELLOW."[Skywars] You need to use English for kit name.";
 							break;
@@ -564,14 +563,14 @@ class PocketSkywars implements Plugin{
 						$this->kit->showList($output);
 						break;
 					case "info":
-						$kitname = array_shift($params);
+						$kitname = array_shift($args);
 						$this->kit->showKitInfo($kitname);
 						break;
 					case "additem":
-						$kitname = array_shift($params);
-						$id = array_shift($params);
-						$meta = array_shift($params);
-						$count = array_shift($params);
+						$kitname = array_shift($args);
+						$id = array_shift($args);
+						$meta = array_shift($args);
+						$count = array_shift($args);
 						if(empty($kitname) or $id === null or !is_numeric($id)){
 							$output .= "Usage: /kit additem <kit> <id>(meta)(count)\n";
 							break;
@@ -589,7 +588,7 @@ class PocketSkywars implements Plugin{
 						if($count === null){
 							$count = 1;
 						}
-						$sets = array("id" => $id, "meta" => $meta, "count" => $count);
+						$sets = ["id" => $id, "meta" => $meta, "count" => $count];
 						if($this->kit->editItem("add", $kitname, $sets)){
 							$output .= FORMAT_DARK_AQUA."[Skywars] Added items to \"$kitname\"!\n";
 						}else{
@@ -611,7 +610,7 @@ class PocketSkywars implements Plugin{
 		return $output;
 	}
 
-	public function playerCommand($cmd, $params, $issuer, $alias){
+	public function playerCommand($cmd, $args, $issuer, $alias){
 		$output = "";
 		switch($cmd){
 			case "surv":
@@ -628,18 +627,22 @@ class PocketSkywars implements Plugin{
 				else $output .= "Game not started!";
 				break;
 			case "refill":
-				if(!isset($params[0])){
+				if(!isset($args[0])){
 					$output .= "[Skywars] You need set rarity for chest!\n";
 					$output .= "[Skywars] /$cmd <middle, pre-middle, spawn>";
 					break;
 				}
-				$this->select[$issuer->username] = array();
-				$rarity = (int) str_replace(array('middle', 'pre-middle', 'spawn'), array(0, 1, 2), $params[0]);
+				elseif($args[0] !== "spawn" or $args[0] !== "pre-middle" or $args[0] !== "middle"){
+					$output .= "[Skywars] /$cmd <middle, pre-middle, spawn>";
+					break;
+				}
+				$this->select[$issuer->username] = [];
+				$rarity = (int) str_replace(['middle', 'pre-middle', 'spawn'], [0, 1, 2], $args[0]);
 				$this->select[$issuer->username]['rarity'] = $rarity;
 				$output .= "[Skywars] Touch a chest to refresh refill";
 				break;
 			case "kit":
-				$kitname = trim(array_shift($params));
+				$kitname = trim(array_shift($args));
 				switch($kitname){
 					case "":
 						$this->kit->showAccountInfo($issuer);
@@ -661,18 +664,18 @@ class PocketSkywars implements Plugin{
 				}
 				break;
 			case "sky":
-				if($params[0] === 'run'){
+				if($args[0] === 'run'){
 					if($this->status !== false){
 						$output .= "The game has already begun!\n";
 						break;
 					}
 					$this->api->chat->broadcast("[Skywars] Skywars server has been running!");
-					$field = $params[1];
+					$field = $args[1];
 					if(empty($field)) $field = false;
 					$this->gameReady($field);
 					break;
 				}
-				elseif($params[0] === 'stop'){
+				elseif($args[0] === 'stop'){
 					if(!$this->api->ban->isOp($issuer->username)) break;
 					if($this->status === false){
 						$output .= FORMAT_YELLOW."[Skywars] Game is not opened!\n";
@@ -681,7 +684,7 @@ class PocketSkywars implements Plugin{
 					$this->gameStop();
 					break;
 				}
-				elseif($params[0] === 'start'){
+				elseif($args[0] === 'start'){
 					if(!$this->api->ban->isOp($issuer->username)) break;
 					if($this->status !== "lobby"){
 						$output .= "[Skywars] This command is unavailable now\n";
@@ -697,8 +700,8 @@ class PocketSkywars implements Plugin{
 		return $output;
 	}
 
-	public function editField($mode, $params, &$output){
-		$field = array_shift($params);
+	public function editField($mode, $args, &$output){
+		$field = array_shift($args);
 		if(!$this->fieldExists($field)){
 			$output .= FORMAT_YELLOW."[Skywars] The field doesn't exist!".FORMAT_RESET.": \"".FORMAT_GREEN."".$field.FORMAT_RESET."\"\n";
 			$output .= "[Skywars] Usage: /sky setlobby <field name> <x> <y> <z> <world>\n";
@@ -708,9 +711,9 @@ class PocketSkywars implements Plugin{
 		}
 		switch($mode){
 			case "setlobby":
-				$x = array_shift($params);
-				$y = array_shift($params);
-				$z = array_shift($params);
+				$x = array_shift($args);
+				$y = array_shift($args);
+				$z = array_shift($args);
 				if(!is_numeric($x) or !is_numeric($y) or !is_numeric($z)){
 					$output .= "[Skywars] Usage: /sky setlobby <field name> <x> <y> <z>\n";
 					break;
@@ -718,34 +721,34 @@ class PocketSkywars implements Plugin{
 				$x = (float) $x;
 				$y = (float) $y;
 				$z = (float) $z;
-				$this->config["field"][$field]["lobby"] = array($x, $y, $z);
+				$this->config["field"][$field]["lobby"] = [$x, $y, $z];
 				$this->writeConfig();
 				$output .= FORMAT_AQUA."[Skywars] Setted!\n";
 				$this->showFieldInfo($field);
 				break;
 			case "addpoint":
-				$x = array_shift($params);
-				$y = array_shift($params);
-				$z = array_shift($params);
+				$x = array_shift($args);
+				$y = array_shift($args);
+				$z = array_shift($args);
 				if(!is_numeric($x) or !is_numeric($y) or !is_numeric($z)){
 					$output .= "[Skywars] Usage: /sky addlobby <field name> <x> <y> <z>\n";
 					break;
 				}
-				$x =(float) $x;
-				$y =(float) $y;
-				$z =(float) $z;
-				$this->config["field"][$field]["start"][] = array($x, $y, $z);
+				$x = (float) $x;
+				$y = (float) $y;
+				$z = (float) $z;
+				$this->config["field"][$field]["start"][] = [$x, $y, $z];
 				$this->writeConfig();
 				$output .= FORMAT_AQUA."[Skywars] Added!\n";
 				$this->showFieldInfo($field);
 				break;
 			case "rmpoint":
-				$number = array_shift($params);
+				$number = array_shift($args);
 				if($number == ""){
 					$output .= "[Skywars] Usage: /sky rmpoint <field name> <number>\n";
 					break;
 				}
-				$number =(int) $number;
+				$number = (int) $number;
 				if(!isset($this->config["field"][$field]["start"][$number])){
 					$output .= FORMAT_YELLOW."[Skywars] No.".$number." has not been setted!\n";
 					break;
@@ -761,47 +764,56 @@ class PocketSkywars implements Plugin{
 
 	public function chestLootList(){
 		$chestLoot = $this->config["chest-loot"];
-		$lootList = array();
+		$lootList = [];
 		foreach($chestLoot as $id => $array){
-			$array["rarity"] = (int) str_replace(array('middle', 'pre-middle', 'spawn'), array(0, 1, 2), $array["rarity"]);
+			$array["rarity"] = (int) str_replace(['middle', 'pre-middle', 'spawn'], [0, 1, 2], $array["rarity"]);
 			$lootList[$id] = $array;
 		}
 		return $lootList;
+	}
+	
+	public function parseMeta($meta){
+		if(!is_numeric($meta)){
+			$arrmeta = explode(" ", $meta);
+			if($arrmeta[0] === "random"){
+				$meta = mt_rand($arrmeta[1], $arrmeta[2]);
+			}else{
+				$meta = 0; //undefined
+			}
+		}
+		return $meta;
 	}
 	
 	public function chestRandLoot(){
 		$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "chests.yml");
 		if(!isset($cfg)) return;
 		$loot = $this->chestLootList();
-		$chests = array();
+		$chests = [];
 		
 		foreach($cfg as $chestID => $chestArray){
 			foreach($loot as $id => $lootArray){
 				if(Utils::chance($lootArray['chance']) and !($lootArray['rarity'] < $chestArray['rarity'])){
-					$chests[$chestID][$id]['meta'] = $lootArray['meta'];
-					if($lootArray['max-count'] == 1) $chests[$chestID][$id]['count'] = 1;
+					if(!isset($lootArray['meta'])) $chests[$chestID][$id]['meta'] = 0;
+					else{
+						$meta = $this->parseMeta($lootArray['meta']);
+						$chests[$chestID][$id]['meta'] = $meta;
+					}
+				
+					if(!isset($lootArray['min-count']) and !isset($lootArray['max-count'])) $chests[$chestID][$id]['count'] = 1;
+					elseif(!isset($lootArray['min-count']) and isset($lootArray['max-count'])) $chests[$chestID][$id]['count'] = mt_rand(1, $lootArray['max-count']);
 					else $chests[$chestID][$id]['count'] = mt_rand($lootArray['min-count'], $lootArray['max-count']);
 					
-					$slots = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26];
-					foreach($slots as $key){ //random slot
+					$slots = range(0, 26);
+					foreach($slots as $key){//random slot
 						$tempSlot = mt_rand(0, 26);
 						if($tempSlot == $slots[$key]){
-							$random = mt_rand(0, 1);
-							if($random === true){
-								$tempSlot = mt_rand($tempSlot+1, 26);
-								array_push($slots, $tempSlot);
-							}
-							else{
-								$tempSlot = mt_rand(0, $tempSlot-1);
-								array_push($slots, $tempSlot);
-							}
+							$tempSlot == mt_rand(0, 26);
 						}
 						else{
 							array_push($slots, $tempSlot);
 						}
 						$chests[$chestID][$id]['slot'] = $tempSlot;
 					}
-					
 				}
 			}
 		}
@@ -814,58 +826,30 @@ class PocketSkywars implements Plugin{
 		if(!isset($cfg)) return;
 		console(FORMAT_AQUA.'[Skywars] Generating loot for chests'.FORMAT_RESET);
 		foreach($cfg as $cfgChestID => $array){
-			$pos = new Position($array['pos']['x'], $array['pos']['y'], $array['pos']['z'], $this->api->level->get($array['pos']['level']));
-			$tile = $this->api->tile->get($pos);
-			if($tile == false){
-				$level = $this->api->level->get($array['pos']['level']);
-				$data = array();
-				$this->api->tile->add($level, TILE_CHEST, $array['pos']['x'], $array['pos']['y'], $array['pos']['z'], $data);
-				$tile = $this->api->tile->get($pos);
-			}
-			elseif($tile->class !== TILE_CHEST) break;
-			$item = $this->api->block->getItem(0, 0, 0);
+			$level = $this->api->level->get($array['pos']['level']);
+			$x = $array['pos']['x'];
+			$y = $array['pos']['y'];
+			$z = $array['pos']['z'];
+			$pos = new Position($x, $y, $z, $level);
+			$level->setBlock($pos, new ChestBlock(), true);
+			$tile = $this->api->tile->add($level, TILE_CHEST, $x, $y, $z, [
+				"Items" => [], 
+				"id" => TILE_CHEST,
+				"x" => $x,
+				"y" => $y,
+				"z" => $z	
+			]);
+			$item = BlockAPI::getItem(0, 0, 1);
 			for($slot = 0; $slot <= 26; $slot++){
 				$tile->setSlot($slot, $item);
 			}
 			
 			$loot = $this->chestRandLoot();
+			$items = [];
 			//console('generating loot for chest with id '.$cfgChestID);
 			foreach($loot[$cfgChestID] as $itemID => $array){
-				/*if(substr($itemID, 0, 5) == 'fire_'){ //this not work
-					console('Spawning fire sword');
-					$itemID = str_replace('fire_', '', $itemID);
-					$id = constant(strtoupper($itemID));
-					$nbt = new NBT();
-					$nbt->write(chr(NBT::TAG_COMPOUND)."\x00\x00");
-					$nbt->write(chr(NBT::TAG_STRING));
-		
-					$nbt->writeTAG_String("Name");
-					switch($id){
-						case WOODEN_SWORD:
-							$nbt->writeTAG_String("Fire Wooden Sword");
-							break;
-						case GOLDEN_SWORD:
-							$nbt->writeTAG_String("Fire Golden Sword");
-							break;
-						case STONE_SWORD:
-							$nbt->writeTAG_String("Fire Stone Sword");
-							break;
-						case IRON_SWORD:
-							$nbt->writeTAG_String("Fire Iron Sword");
-							break;
-						case DIAMOND_SWORD:
-							$nbt->writeTAG_String("Fire Diamond Sword");
-							break;
-						default:
-							break;
-					}
-					$nbt->write(chr(NBT::TAG_STRING));
-					$item = $this->api->block->getItem($id, $array['meta'], $array['count']);
-				}
-				else{*/
 				$id = constant(strtoupper($itemID));
-				$item = $this->api->block->getItem($id, $array['meta'], $array['count']);
-				//}
+				$item = BlockAPI::getItem($id, $array['meta'], $array['count']);
 				$tile->setSlot($array['slot'], $item);
 				//console('id: '.$itemID.' meta:'.$array['meta'].' count: '.$array['count'].' slot: '.$array['slot']);
 			}
@@ -961,7 +945,7 @@ class PocketSkywars implements Plugin{
 			}
 		}
 		elseif($s > 59 and $s < 3601){
-			$m = array(floor($s / 60), $s - floor($s / 60) * 60);
+			$m = [floor($s / 60), $s - floor($s / 60) * 60];
 			if($m[0] >= 2){
 				$time .= "$m[0] minutes";
 			}elseif($m[0] == 1){
@@ -969,7 +953,7 @@ class PocketSkywars implements Plugin{
 			}
 		}
 		else{
-			$hm = array(floor($s / 3600), $s - floor($s / 3600) * 3600);
+			$hm = [floor($s / 3600), $s - floor($s / 3600) * 3600];
 			if($hm[0] >= 2){
 				$time .= "$hm[0] hours";
 			}elseif($hm[0] == 1){
@@ -1019,11 +1003,11 @@ class PocketSkywars implements Plugin{
 	public function gameSuspend(){
 		$this->status = "finish";
 		if(count($this->players) === 0){
-			$this->schedule(10, "gameStop", array("[Skywars] Countdown stopped due to no online."));
+			$this->schedule(10, "gameStop", ["[Skywars] Countdown stopped due to no online."]);
 		}
 		else{
 			$this->cancelAllSchedules();
-			$this->schedule(10, "gameLobby", array());
+			$this->schedule(10, "gameLobby", []);
 			return;
 		}
 	}
@@ -1047,51 +1031,51 @@ class PocketSkywars implements Plugin{
 		$this->tool("lock.time", false);
 		$this->tool("first.spawn", false);
 		$this->cancelAllSchedules();
-		$this->players = array();
-		$this->score = array();
+		$this->players = [];
+		$this->score = [];
 		$this->field = false;
 		$this->status = false;
 		$this->kit->resetParams();
 	}
 
-	public function tool($tool, $params){
+	public function tool($tool, $args){
 		switch($tool){
 			case "server.gate":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->switch["server.gate"] = (bool) $bool;
 				break;
 			case "pvp":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->api->setProperty("pvp", $bool);
 				break;
 			case "first.spawn":
-				$position = $params;
+				$position = $args;
 				$this->switch["first.spawn"] = $position;
 				break;
 			case "world.protect":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->switch["world.protect"] = (bool) $bool;
 				break;
 			case "game.world.protect":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->switch["game.world.protect"] = (bool) $bool;
 				break;
 			case "chest.lock":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->switch["chest.lock"] = (bool) $bool;
 				break;
 			case "death.count":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->switch["death.count"] = (bool) $bool;
 				break;
 			case "freeze.players":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$players = $this->api->player->getAll();
 				if(count($players) == 0) return;
@@ -1100,18 +1084,17 @@ class PocketSkywars implements Plugin{
 				}
 				break;
 			case "backup":
-				$bool = $params;
+				$bool = $args;
 				$this->formatBool($bool);
 				$this->switch["backup"] = $bool;
 				if($bool){
 					console("[Skywars] The world data is backuped.");
-					$this->backupChest();
 				}else{
 					$this->restoreWorld();
 				}
 				break;
 			case "lock.time":
-				$time = $params;
+				$time = $args;
 				@$this->cancelSchedule($this->s_id["time"]);
 				if($time === false){
 					$this->setTime(1000);
@@ -1129,13 +1112,13 @@ class PocketSkywars implements Plugin{
 		$invincible = $lobby + $cfg["invincible"];
 		$play = $invincible + $cfg["play"];
 		$finish = $play + $cfg["finish"];
-		$this->s_id["invincible"] = $this->schedule($lobby, "gameInvincible", array());
-		$this->s_id["play"] = $this->schedule($invincible, "gamePlay", array());
-		$this->s_id["finish"] = $this->schedule($play, "gameFinish", array());
+		$this->s_id["invincible"] = $this->schedule($lobby, "gameInvincible", []);
+		$this->s_id["play"] = $this->schedule($invincible, "gamePlay", []);
+		$this->s_id["finish"] = $this->schedule($play, "gameFinish", []);
 	}
 
 	public function setPlayers(){
-		$this->players = array();
+		$this->players = [];
 		$players = $this->api->player->getAll();
 		if(count($players) !== 0){
 			foreach($players as $player){
@@ -1210,10 +1193,10 @@ class PocketSkywars implements Plugin{
 	}
 
 	public function readyScore(){
-		$this->score = array();
+		$this->score = [];
 		if(count($this->players) === 0)	return;
 		foreach($this->players as $player){
-			$this->score[$player->username] = array("kill" => array(), "cause" => " - ", "exp" =>(int) 0);
+			$this->score[$player->username] = ["kill" => [], "cause" => " - ", "exp" => (int) 0];
 		}
 	}
 
@@ -1225,7 +1208,7 @@ class PocketSkywars implements Plugin{
 	}
 
 	public function getStartPoints(){
-		$return = array();
+		$return = [];
 		$level = $this->getFieldLevel();
 		foreach($this->field["start"] as $p){
 			$return[] = new Position($p[0], $p[1], $p[2], $level);
@@ -1247,7 +1230,7 @@ class PocketSkywars implements Plugin{
 	public function teleportAllPlayers($point){
 		$level = $this->getFieldLevel();
 		$allPlayers = $this->api->player->getAll();
-		$players = array();
+		$players = [];
 		foreach($allPlayers as $player){
 			array_push($players, $player);
 		}
@@ -1301,16 +1284,6 @@ class PocketSkywars implements Plugin{
 		$this->backup["world"][] = $block;
 	}
 
-	public function backupChest(){
-		if(count($this->api->tile->getAll()) == 0) break;
-		foreach($this->api->tile->getAll() as $tile){
-			if($tile->class === TILE_CHEST){
-				$pos = new Position($tile->x, $tile->y, $tile->z, $tile->level);
-				$this->backup["chest"][] = array("pos" => $pos);
-			}
-		}
-	}
-
 	public function restoreWorld(){
 		if(count($this->backup["world"]) !== 0){
 			$blocks = array_reverse($this->backup["world"]);
@@ -1318,22 +1291,12 @@ class PocketSkywars implements Plugin{
 				$block->level->setBlockRaw($block, $block);
 			}
 		}
-		if(count($this->backup["chest"]) !== 0){
-			foreach($this->backup["chest"] as $chest){
-				$tile = $this->api->tile->get($chest["pos"]);
-				if($tile === false){
-					$tile = $this->api->tile->add($chest["pos"]->level, TILE_CHEST, $chest["pos"]->x, $chest["pos"]->y, $chest["pos"]->z);
-				}
-				if(($tile instanceof Tile) and $tile->class === TILE_CHEST){
-				}
-			}
-		}
-		$this->backup = array("world" => array(), "chest" => array());
+		$this->backup = ["world" => []];
 	}
 
 	public function countdown($int){
 		$time = $int;
-		$counts = array();
+		$counts = [];
 		switch($time){
 			case($time >= 60):
 				$counts = array_merge($counts, $this->getMultiple($time, 60));
@@ -1389,8 +1352,8 @@ class PocketSkywars implements Plugin{
 	}
 
 	public function getMultiple($int, $mlt){
-		$arg =(int) $mlt;
-		$return = array();
+		$arg = (int) $mlt;
+		$return = [];
 		while($arg <= $int){
 			if(($arg % $mlt) == 0){
 				$return[] = $arg;
@@ -1450,13 +1413,13 @@ class PocketSkywars implements Plugin{
 		}
 		$map = $this->config["field"][$field];
 		if(!isset($map["lobby"][0])){
-			$map["lobby"] = array(0 => "-", 1 => "-", 2 => "-");
+			$map["lobby"] = [0 => "-", 1 => "-", 2 => "-"];
 		}
 		if(count($map["start"]) == 0){
 		}else{
 			foreach($map["start"] as $i => $point){
 				if(!isset($point[0])){
-					$point = array(0 => "-", 1 => "-", 2 => "-");
+					$point = [0 => "-", 1 => "-", 2 => "-"];
 				}
 				console(FORMAT_YELLOW."  No.".$i.FORMAT_RESET.": (x ".$point[0].",y ".$point[1].",z ".$point[2].")");
 			}
@@ -1470,11 +1433,11 @@ class PocketSkywars implements Plugin{
 		return true;
 	}
 
-	public function schedule($ticks, $method, $args = array(), $repeat = false){
+	public function schedule($ticks, $method, $args = [], $repeat = false){
 		$id = $this->count_id;
 		$ticks = $ticks * CONVERT_COEFFICIENT;
-		$this->schedule[$id] = array($ticks, $method, $args, $repeat);
-		$this->api->schedule($ticks, array($this, "callback"), array($method, $args), $repeat, $id);
+		$this->schedule[$id] = [$ticks, $method, $args, $repeat];
+		$this->api->schedule($ticks, [$this, "callback"], [$method, $args], $repeat, $id);
 		$this->count_id++;
 		return $id;
 	}
@@ -1488,11 +1451,11 @@ class PocketSkywars implements Plugin{
 		foreach($this->s_id["count"] as $id){
 			$this->cancelSchedule($id);
 		}
-		$this->s_id["count"] = array();
+		$this->s_id["count"] = [];
 	}
 
 	public function cancelAllSchedules(){
-		$this->schedule = array();
+		$this->schedule = [];
 	}
 
 	public function getSchedule($id){
@@ -1504,8 +1467,8 @@ class PocketSkywars implements Plugin{
 		$schedule = $this->getSchedule($id);
 		if($schedule === false) return false;
 		$method = $args[0];
-		$params =(Array) $args[1];
-		@call_user_func_array(array($this, $method), $params);
+		$args = (array) $args[1];
+		@call_user_func_array([$this, $method], $args);
 		if($schedule[3] === false){
 			unset($this->schedule[$id]);
 		}
@@ -1529,11 +1492,11 @@ class PocketSkywars implements Plugin{
 			foreach($data["start"] as $no => $p){
 				$line4 = "No.".$no;
 				$level->setBlock(new Vector3($p[0], $p[1], $p[2]), $sign, false, true, true);
-				$this->api->tile->addSign($level, $p[0], $p[1], $p[2], array($line1, $line2, $line3, $line4));
+				$this->api->tile->addSign($level, $p[0], $p[1], $p[2], [$line1, $line2, $line3, $line4]);
 			}
 			$p = $data["lobby"];
 			$level->setBlock(new Vector3($p[0], $p[1], $p[2]), $sign, false, true, true);
-			$this->api->tile->addSign($level, $p[0], $p[1], $p[2], array($line1, $line2, "LOBBY", ""));
+			$this->api->tile->addSign($level, $p[0], $p[1], $p[2], [$line1, $line2, "LOBBY", ""]);
 		}
 	}
 
@@ -1595,7 +1558,7 @@ class PocketSkywars implements Plugin{
 					$player->inventory[$s] = $air;
 				}
 			}
-			$player->armor = array($air, $air, $air, $air);
+			$player->armor = [$air, $air, $air, $air];
 			$player->sendInventorySlot();
 			$player->sendArmor($player);
 		}
@@ -1616,12 +1579,12 @@ class PocketSkywars implements Plugin{
 
 	public function givePrize($username){
 		$amount = (int) $this->config["prize"];
-		$data = array(
+		$data = [
 			"issuer" => "PocketSkywars",
 			"username" => $username,
 			"method" => "grant",
 			"amount" => $amount,
-		);
+		];
 		if($this->api->dhandle("money.handle", $data) === true)	return true;
 		return false;
 	}
@@ -1659,23 +1622,23 @@ class PocketSkywars implements Plugin{
 	}
 
 	public function createConfig(){
-		$config = array(
+		$config = [
 				"prize" => 100,
 				"game-world-protect" => false,
 				"lock-time" => "day",
 				"world-protect" => false,
-				"times" => array(
+				"times" => [
 						"lobby" => 120,
 						"play" => 600,
 						"chest-refill" => 300,
 						"invincible" => 30,
 						"finish" => 30,
-				),
-				"exp" => array(
+				],
+				"exp" => [
 						"kill" => 20,
 						"win-tournament" => 50,
-				),
-				"announce" => array(
+				],
+				"announce" => [
 						"Your inventory will be emptied when game begins.",
 						"Original developer is @omattyao_yk",
 						"You should not carry any items in the game.",
@@ -1683,28 +1646,26 @@ class PocketSkywars implements Plugin{
 						"Who survived at the very end will be the winner.",
 						"Plugin fixed by ArkQuark",
 						"Coin has been provided when you joined.",
-				),
-				"chest-loot" => array(
-					"stone" => array(
-						"meta" => 0,
+				],
+				"chest-loot" => [
+					"stone" => [
 						"min-count" => 2,
 						"max-count" => 16,
 						"rarity" => 'spawn',
 						"chance" => 40,
-						),
-					"wooden_planks" => array(
-						"meta" => 0,
+					],
+					"wooden_planks" => [
 						"min-count" => 4,
 						"max-count" => 16,
 						"rarity" => 'spawn',
 						"chance" => 40,
-					),
-				),
-				"field" => array(),
-		);
+					],
+				],
+				"field" => []
+		];
 		$this->path = $this->api->plugin->createConfig($this, $config);
 		$this->config = $this->api->plugin->readYAML($this->path."config.yml");
-		$this->chestConfig = new Config($this->api->plugin->configPath($this)."chests.yml", CONFIG_YAML, array());
+		$this->chestConfig = new Config($this->api->plugin->configPath($this)."chests.yml", CONFIG_YAML, []);
 	}
 
 	public function writeConfig(){
@@ -1736,8 +1697,8 @@ class PocketSkywars implements Plugin{
 			$time = "0 second";
 			return false;
 		}
-		$ms = array(floor($s / 60), $s - floor($s / 60) * 60);
-		$hm = array(floor($ms[0] / 60), $ms[0] - floor($ms[0] / 60) * 60);
+		$ms = [floor($s / 60), $s - floor($s / 60) * 60];
+		$hm = [floor($ms[0] / 60), $ms[0] - floor($ms[0] / 60) * 60];
 		if($hm[0] >= 2){
 			$time .= "$hm[0] hours ";
 		}elseif($hm[0] == 1){
@@ -1774,7 +1735,7 @@ class PocketSkywars implements Plugin{
 		if($kill === 0 and $death === 0){
 			$kd = " - ";
 		}elseif($kill === 0){
-			$kd =(String) "0.00";
+			$kd = (string) "0.00";
 		}else{
 			$kd = bcdiv($kill, $kill + $death, 2);
 		}
@@ -1782,7 +1743,7 @@ class PocketSkywars implements Plugin{
 	}
 
 	private function levelFormula($level){
-		$quota  = round((4 *(pow(1.4, $level) - 1.4) / 0.7) * 10);
+		$quota  = round((4 * (pow(1.4, $level) - 1.4) / 0.7) * 10);
 		return $quota;
 	}
 
@@ -1793,7 +1754,7 @@ class PocketSkywars implements Plugin{
 			$exp -= $quota;
 			$quota = $this->levelFormula($level + 1);
 		}
-		return array("level" => $level, "exp" => $exp, "quota" => $quota);
+		return ["level" => $level, "exp" => $exp, "quota" => $quota];
 	}
 
 	private function loadDB(){
@@ -1837,7 +1798,7 @@ class PocketSkywars implements Plugin{
 	}
 
 	private function getRecords(){
-		$records = array();
+		$records = [];
 		$result = $this->db->query("SELECT * FROM records");
 		while($res = $result->fetchArray(SQLITE3_ASSOC)){
 			$records[] = $res;
@@ -1874,13 +1835,13 @@ class KitManager{
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
-		$this->coin = array();
-		$this->players = array();
-		$this->config = array(
+		$this->coin = [];
+		$this->players = [];
+		$this->config = [
 				"max-kit" => 5,
 				"max-item" => 5,
 				"max-skill" => 5,
-		);
+		];
 	}
 
 	public function buy($user, $level, $kitname){
@@ -1943,7 +1904,7 @@ class KitManager{
 	public function getEquipment($user){
 		if(empty($user))	return false;
 		if(!isset($this->players[$user])){
-			$this->players[$user] = array();
+			$this->players[$user] = [];
 		}
 		return array_keys($this->players[$user]);
 	}
@@ -1953,8 +1914,8 @@ class KitManager{
 		if($kit !== false){
 			return false;
 		}
-		$level =(Int) max(1, $level);
-		$price =(Int) max(0, $price);
+		$level = (int) max(1, $level);
+		$price = (int) max(0, $price);
 		$this->kitdb->exec("INSERT INTO kits(name, price, level) VALUES('".$name."', '".$price."', '".$level."');");
 		/*
 		 for($i = 0; $i <= 4; $i++){
@@ -1983,7 +1944,7 @@ class KitManager{
 				console(FORMAT_RED."[Skywars] cannot add items anymore.");
 				return false;
 			case "remove":
-				$slot =(Int) $param;
+				$slot = (int) $param;
 				break;
 		}
 	}
@@ -2001,7 +1962,7 @@ class KitManager{
 	}
 
 	public function getAll(){
-		$kits = array();
+		$kits = [];
 		$result = $this->kitdb->query("SELECT * FROM kits;");
 		while($kit= $result->fetchArray(SQLITE3_ASSOC)){
 			$kits[] = $kit;
@@ -2079,8 +2040,8 @@ class KitManager{
 	}
 
 	public function resetParams(){
-		$this->players = array();
-		$this->coin = array();
+		$this->players = [];
+		$this->coin = [];
 	}
 
 	public function DB($path){
