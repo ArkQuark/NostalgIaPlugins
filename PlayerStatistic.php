@@ -3,7 +3,7 @@
 __PocketMine Plugin__
 name=PlayerStatistic
 description=Statictic players ingame time
-version=0.6.1
+version=0.6.1q_ghb
 author=ArkQuark
 class=PlayerStats
 apiversion=12.1
@@ -20,10 +20,12 @@ class PlayerStats implements Plugin{
 		$this->config = new Config($this->api->plugin->configPath($this)."times.yml", CONFIG_YAML, array());
 		$this->api->schedule(60*20, array($this, "checkOnline"), array(), true);
 		$this->api->event("player.join", array($this, "event"));
+		$this->api->event("query.update", array($this, "event"));
 		//$this->api->event("player.quit", array($this, "event"));
 		$this->api->console->register("mytime", "Check ingame time!", array($this, "commandHandler"));
 		$this->api->ban->cmdWhitelist("mytime");
 		$this->convertNicknames();
+		$this->api->query->regenerateInfo();
 	}
 	
 	public function event(&$data, $event){
@@ -36,6 +38,9 @@ class PlayerStats implements Plugin{
 					$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."times.yml", $cfg);
 				}
 				break;
+			case "query.update":
+				$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "times.yml");
+				$this->api->queryAPI->updateQueryData("timeplayed", json_encode($cfg));
 			/*case 'player.quit':
 				break;*/
 		}
