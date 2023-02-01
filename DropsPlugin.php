@@ -4,17 +4,19 @@
 __PocketMine Plugin__
 name=DropsPlugin
 description=New drops from blocks
-version=1.3
+version=1.3b
 author=ArkQuark
 class=Quartz
-apiversion=11,12
+apiversion=11,12,12.1
 */
 
 class Quartz implements Plugin{
-	private $api;
+	private $api, $blockIdAccessor;
 	
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
+		$this->blockIdAccessor = (new ReflectionClass("Block"))->getProperty("id");
+		$this->blockIdAccessor->setAccessible(true);
 	}
 	
 	public function init(){
@@ -38,6 +40,7 @@ class Quartz implements Plugin{
 					$level->setBlock(new Vector3($block->x, $block->y, $block->z), new AirBlock());
 					$item = $this->api->block->fromString("QUARTZ");
 					$this->api->entity->drop($pos, $item);
+					$this->blockIdAccessor->setValue($data["target"], 0);
 					return false;
 				}
 			}
