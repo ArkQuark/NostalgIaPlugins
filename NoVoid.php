@@ -11,7 +11,6 @@ class=NVmain
 */
 
 class NVmain implements Plugin{
-
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 	}
@@ -21,12 +20,11 @@ class NVmain implements Plugin{
 	}
 	
 	public function handle(&$data, $event){
-		if($data->y <= 10){
+		if($data->y <= 1){
 			$this->api->entity->harm($data->eid, PHP_INT_MAX, "void", true);
 			$data->player->blocked = true;
 		}
 	}
 	
 	public function __destruct(){}
-	
 }
