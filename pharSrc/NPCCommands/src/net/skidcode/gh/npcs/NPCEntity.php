@@ -3,21 +3,21 @@ namespace net\skidcode\gh\npcs;
 
 use Level;
 use Player;
-use Wolf;
+use Zombie;
 use AddPlayerPacket;
 use AddEntityPacket;
 use TaskLookAtPlayer;
 use Utils;
 use ReflectionClass;
-class NPCEntity extends Wolf
+class NPCEntity extends Zombie
 {
 	const TYPE = -9999;
     function __construct(Level $level, $eid, $class, $type = 0, $data = array()){
         //$weirdcode1 = self::$despawnMobs;
         //self::$despawnMobs = false;
-        parent::__construct($level, $eid, $class, MOB_WOLF, $data);
+        parent::__construct($level, $eid, $class, MOB_ZOMBIE, $data);
         //self::$despawnMobs = $weirdcode1;
-		//$this->ai = new \EntityAI($this);
+	//$this->ai = new \EntityAI($this);
         $this->setName($data["command"]);
         $this->yaw = $this->pitch = 0;
     }
