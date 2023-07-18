@@ -1,6 +1,6 @@
 <?php
 
-namespace de;
+namespace de\tvorok\minigames\cl;
 
 class ClassLoader implements \IClassLoader{
 	public function loadAll($pharPath){

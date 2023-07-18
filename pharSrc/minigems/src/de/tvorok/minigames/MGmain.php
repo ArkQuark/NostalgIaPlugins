@@ -99,7 +99,7 @@ class MGmain implements Plugin{
         if($this->config["obstacleraceEnable"]){
             $this->games["obstaclerace"] = new ObstacleRace($this->api);
             
-            $this->api->console->register("or", "", [$this->games["tntrun"], "command"]);
+            $this->api->console->register("or", "", [$this->games["obstaclerace"], "command"]);
             $this->api->ban->cmdWhitelist("or");
         }
     }
