@@ -12,14 +12,16 @@ class MGconfig{
     }
 
     public function createConfig(){
-        if(!file_exists(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "MiniGames", ""]))){
-			mkdir(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "MiniGames", ""]), 0777);
+        if(!file_exists(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", ""]))){
+			mkdir(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", ""]), 0777);
 		}
-        $this->mainPath = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "MiniGames", "main.yml"]);
+        $this->mainPath = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", "main.yml"]);
         $this->configFile = new Config($this->mainPath, CONFIG_YAML, [
             "MiniGames" => [
                 "pluginEnable" => true,
                 "spleefEnable" => true,
+                "tntrunEnable" => true,
+                "obstacleraceEnable" => true
                 /*"hub" => [
                     "x" => $x,
                     "y" => $y,
@@ -31,7 +33,7 @@ class MGconfig{
     }
 
     public function getMainConfig(){
-        return $this->api->plugin->readYAML(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "MiniGames", "main.yml"]))["MiniGames"];
+        return $this->api->plugin->readYAML(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", "main.yml"]))["MiniGames"];
     }
 
     public function createDataConfig(){
@@ -57,7 +59,7 @@ class MGconfig{
     }
 
     public function getDataPath(){
-        return join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "MiniGames", "data.yml"]);
+        return join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", "data.yml"]);
     }
 
     public function posIntoConfig(Player $player, String $fieldName, String $need, $path){
@@ -108,7 +110,7 @@ class MGconfig{
     }
 
     public function createGameConfig($game){
-        $path = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "MiniGames", $game.".yml"]);
+        $path = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", $game.".yml"]);
         new Config($path, CONFIG_YAML, [
             "lobbyTime" => 300
         ]);

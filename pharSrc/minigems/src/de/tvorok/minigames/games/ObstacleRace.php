@@ -17,7 +17,7 @@ class ObstacleRace extends MGdummyGame{
         $this->gameName = "ObstacleRace";
     }
     
-    public function loserProcess($data, $fieldName){
+    public function loserProcess($data, $fieldName, $event){
         $field = $this->sessions[$fieldName];
         $user = $data->username;
         $field->removePlayer($user);

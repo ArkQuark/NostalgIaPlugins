@@ -42,6 +42,9 @@ class MGmain implements Plugin{
         if($this->config["pluginEnable"] and isset($this->config["hub"])){
             $this->runGames();
         }
+        else{
+            console(FORMAT_RED."You need a hub to run games!!".FORMAT_RESET);
+        }
     }
 
     public function command($cmd, $args, $issuer, $alias){
@@ -83,6 +86,7 @@ class MGmain implements Plugin{
 
             $this->api->console->register("spleef", "", [$this->games["spleef"], "command"]);
             $this->api->ban->cmdWhitelist("spleef");
+            console("Spleef enabled");
         }
     }
 
@@ -92,6 +96,7 @@ class MGmain implements Plugin{
     
             $this->api->console->register("tntrun", "", [$this->games["tntrun"], "command"]);
             $this->api->ban->cmdWhitelist("tntrun");
+            console("TntRun enabled");
         }
     }
     
@@ -101,6 +106,7 @@ class MGmain implements Plugin{
             
             $this->api->console->register("or", "", [$this->games["obstaclerace"], "command"]);
             $this->api->ban->cmdWhitelist("or");
+            console("ObstacleRace enabled");
         }
     }
 
