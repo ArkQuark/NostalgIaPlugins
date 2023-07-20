@@ -35,8 +35,9 @@ class MGmain implements Plugin{
 
         $this->api->addHandler("hub.teleport", [$this, "handler"]);
 
-        $this->api->console->register("hub", "", [$this, "command"]);
+        $this->api->console->register("hub", "", [$this, "commandHub"]);
         $this->api->ban->cmdWhitelist("hub");
+        $this->api->console->register("sethub", "", [$this, "commandSetHub"]);
 
         $this->games = [];
         if($this->config["pluginEnable"] and isset($this->config["hub"])){
@@ -47,30 +48,26 @@ class MGmain implements Plugin{
         }
     }
 
-    public function command($cmd, $args, $issuer, $alias){
+    public function commandHub($cmd, $args, $issuer, $alias){
         if(!($issuer instanceof Player)){
             return "Please run this command in-game!";
         }
-        if(!isset($args[0])){
-            $args[0] = "";
+        if(!isset($this->config["hub"])){
+            return "/hub not exists!";
         }
-        switch($args[0]){
-            case "":
-                if(!isset($this->config["hub"])){
-                    return "/hub not exists!";
-                }
-                $hub = $this->config["hub"];
-                $issuer->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
-                $this->api->dhandle("hub.teleport", ["player" => $issuer]);
-                break;
-            case "set":
-                $pos = (new MGplayer($this->api))->posCommand($issuer->entity);
-                $this->mgConfig->addHub($pos+["level" => $issuer->entity->level->getName()]);
-                $this->runGames();
-                return "/hub seted";
-                break;
-        }
+        $hub = $this->config["hub"];
+        $issuer->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
+        $this->api->dhandle("hub.teleport", ["player" => $issuer]);
+        return "You've been teleported to hub!";
     }
+    
+    public function commandSetHub($cmd, $args, $issuer, $alias){
+        $pos = (new MGplayer($this->api))->posCommand($issuer->entity);
+        $this->mgConfig->addHub($pos + ["level" => $issuer->entity->level->getName()]);
+        $this->runGames();
+        return "/hub seted";
+    }
+        
 
     public function runGames(){
         if(count($this->games) == 0){
@@ -82,9 +79,9 @@ class MGmain implements Plugin{
 
     public function spleefGame(){
         if($this->config["spleefEnable"]){
-            $this->games["spleef"] = new Spleef($this->api);
+            $this->games["Spleef"] = new Spleef($this->api);
 
-            $this->api->console->register("spleef", "", [$this->games["spleef"], "command"]);
+            $this->api->console->register("spleef", "", [$this->games["Spleef"], "command"]);
             $this->api->ban->cmdWhitelist("spleef");
             console("Spleef enabled");
         }
@@ -92,20 +89,20 @@ class MGmain implements Plugin{
 
     public function tntrunGame(){
         if($this->config["tntrunEnable"]){
-            $this->games["tntrun"] = new TNTRun($this->api);
+            $this->games["TNTRun"] = new TNTRun($this->api);
     
-            $this->api->console->register("tntrun", "", [$this->games["tntrun"], "command"]);
+            $this->api->console->register("tntrun", "", [$this->games["TNTRun"], "command"]);
             $this->api->ban->cmdWhitelist("tntrun");
-            console("TntRun enabled");
+            console("TNTRun enabled");
         }
     }
     
     public function obstacleraceGame(){
         if($this->config["obstacleraceEnable"]){
-            $this->games["obstaclerace"] = new ObstacleRace($this->api);
+            $this->games["ObstacleRace"] = new ObstacleRace($this->api);
             
-            $this->api->console->register("or", "", [$this->games["obstaclerace"], "command"]);
-            $this->api->ban->cmdWhitelist("or");
+            $this->api->console->register("race", "", [$this->games["ObstacleRace"], "command"]);
+            $this->api->ban->cmdWhitelist("race");
             console("ObstacleRace enabled");
         }
     }
@@ -120,8 +117,6 @@ class MGmain implements Plugin{
             }
             $hub = $this->config["hub"];
             $data->setSpawn(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
-            $this->mgConfig->setZeroWins($data->username, "spleef");
-            $this->mgConfig->setZeroWins($data->username, "tntrun");
             return;
         }
         elseif($event == "player.offline.get"){
@@ -165,7 +160,7 @@ class MGmain implements Plugin{
         elseif($m > 1) $msg .= "$m minutes ";
 
         if($s === 1) $msg .= "1 second";
-        else $msg .= "$s seconds";
+        elseif($s > 1) $msg .= "$s seconds";
         return trim($msg);
     }
 

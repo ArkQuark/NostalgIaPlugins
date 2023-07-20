@@ -15,10 +15,12 @@ class ObstacleRace extends MGdummyGame{
     public function __construct(ServerAPI $api, $server = false){
         parent::__construct($api);
         $this->gameName = "ObstacleRace";
+        $this->createConfig();
     }
     
     public function playerDeath($data, $hData){
-        //tp
+        $this->mgPlayer->teleportAll("spawnpoint", [$hData["user"]], $this->config, $hData["field"]->getName());
+        $hData["user"]->setHealth(20, "heal");
         return false;
     }
     

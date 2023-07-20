@@ -4,13 +4,13 @@ namespace de\tvorok\minigames\games;
 
 use Player;
 use ServerAPI;
-use Vector3;
 use de\tvorok\minigames\MGconfig;
 use de\tvorok\minigames\MGmain;
 use de\tvorok\minigames\MGplayer;
 use de\tvorok\minigames\gameSession;
+use de\tvorok\minigames\MGcommands;
 
-class MGdummyGame{
+class MGdummyGame extends MGcommands{
     public function __construct(ServerAPI $api, $server = false){
         $this->api = $api;
         $this->sessions = [];
@@ -18,9 +18,6 @@ class MGdummyGame{
         
         $this->mgConfig = new MGconfig($this->api);
         $this->mgPlayer = new MGplayer($this->api);
-        
-        $this->path = $this->mgConfig->createGameConfig($this->gameName);
-        $this->setFields();
     }
     
     public function createConfig(){
@@ -59,6 +56,10 @@ class MGdummyGame{
         return false;
     }
     
+    public function playerDeath($data, $hData){
+        return;
+    }
+    
     public function playerQuit($data, $hData){
         $field = $hData["field"];
         $user = $hData["user"];
@@ -89,11 +90,11 @@ class MGdummyGame{
         
         $field->removePlayer($user);
         $this->updateField($field);
-        $this->mgPlayer->confiscateItems($this->api->player->get($user));
+        //$this->mgPlayer->confiscateItems($this->api->player->get($user));
         if($status == "game"){
             $this->checkForWin($field);
         }
-        $data["player"]->sendChat("You leave ".$this->gameName." game!");
+        $data["player"]->sendChat("You left ".$this->gameName." game!");
     }
     
     public function handler($data, $event){
@@ -127,6 +128,9 @@ class MGdummyGame{
             case "player.block.break":
                 $this->playerBlockBreak($data, $hData);
                 break;
+            case "player.death":
+                $this->playerDeath($data, $hData);
+                break;
             case "player.quit":
                 $this->playerQuit($data, $hData);
                 break;
@@ -139,87 +143,6 @@ class MGdummyGame{
             case "hub.teleport":
                 $this->hubTeleport($data, $hData);
                 break;
-        }
-    }
-    
-    public function command($cmd, $args, $issuer, $alias){
-        if(!($issuer instanceof Player)){
-            return "Please run command in game.";
-        }
-        if(!isset($args[0]) or $args[0] === ""){
-            if($this->api->ban->isOp($issuer->username)){
-                return "/$cmd join <fieldName>\n/$cmd wins\n/$cmd setfield <fieldName> [maxPlayers]\n/$cmd setlobby <fieldName>\n/$cmd setpos1 <fieldName>\n/$cmd setpos2 <fieldName>";
-            }
-            return "/$cmd join <fieldName>\n/$cmd wins";
-        }
-        $output = "";
-        switch($args[0]){
-            case "wins":
-                return $this->mgConfig->getWins($issuer->username, $this->gameName)." wins";
-            case "join":
-                if(!isset($args[1]) or $args[1] === ""){
-                    return "/$cmd join <field>";
-                }
-                $fieldName = $args[1];
-                if(!isset($this->config["fields"][$fieldName])){
-                    return "/this field doesn't exist!";
-                }
-                if($issuer->level->getName() != $this->mgConfig->getMainConfig()["hub"]["level"]){
-                    return "/you need to be in hub to join!";
-                }
-                if(MGmain::playerInField($issuer->username, $this->fields) != false){
-                    return "/you already in field!";
-                }
-                if(!isset($this->sessions[$fieldName])){ //start code
-                    $this->startField($fieldName);
-                    //$output .= "/starting field \"$fieldName\"\n";
-                }
-                $msg = $this->mgPlayer->joinField($this->sessions[$fieldName], $issuer, $this->config["fields"][$fieldName], $this->gameName);
-                $this->updateField($this->sessions[$fieldName]);
-                return $msg;
-            default:
-                if($this->api->ban->isOp($issuer->username)){
-                    $output = $this->opCommand($cmd, $args, $issuer);
-                }
-        }
-        return $output;
-    }
-    
-    public function opCommand($cmd, $args, $issuer){
-        if(isset($args[1]) and $args[1] !== ""){
-            $fieldName = $args[1];
-        }
-        else{
-            return "/$cmd ".$args[0]." <fieldName>";
-        }
-        switch($args[0]){
-            case "setfield":
-                if(!isset($args[2]) or $args[2] == ""){
-                    $maxPlayers = 12;
-                }
-                else{
-                    $maxPlayers = $args[2];
-                }
-                $this->mgConfig->fieldIntoConfig($this->path, $fieldName, [
-                    "level" => $issuer->entity->level->getName(),
-                    "maxPlayers" => $maxPlayers
-                ]);
-                $this->setFields();
-                return "/field $fieldName created";
-                //todo delfield
-            case "setpos1":
-            case "setpos2":
-            case "setlobby":
-                $output = $this->mgConfig->posIntoConfig($issuer, $fieldName, substr($args[0], 3), $this->path);
-                if($output){
-                    $this->setFields();
-                    return "/".$args[0]." seted";
-                }
-                else{
-                    return $output;
-                }
-            case "start":
-                return "/use /$cmd join <fieldName>";
         }
     }
     

@@ -98,13 +98,13 @@ class MGconfig{
 
     public function addWin(String $username, String $game){
         $cfg = $this->getDataConfig();
-        $cfg[$game."Wins"][$username] = $cfg[$game."Wins"][$username] + 1;
+        $cfg[$game."Wins"][$username] = isset($cfg[$game."Wins"][$username]) ? $cfg[$game."Wins"][$username] + 1 : 0 + 1;
         $this->api->plugin->writeYAML($this->getDataPath(), $cfg);
     }
     
     public function getWins(String $username, String $game){
         $cfg = $this->getDataConfig();
-        return $cfg[$game."Wins"][$username];
+        return isset($cfg[$game."Wins"][$username]) ? $cfg[$game."Wins"][$username] : 0;
     }
 
     public function createGameConfig($game){

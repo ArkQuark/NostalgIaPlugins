@@ -16,31 +16,11 @@ class MGcommands{
             return "/$cmd join <fieldName>\n/$cmd wins";
         }
         $output = "";
-        $subcmd = $args[0];
-        switch($subcmd){
+        switch($args[0]){
             case "wins":
-                return $this->mgConfig->getWins($issuer->username, $this->gameName)." wins";
+                return $this->commandWins($cmd, $args, $issuer);
             case "join":
-                if(!isset($args[1]) or $args[1] === ""){
-                    return "/$cmd join <field>";
-                }
-                $fieldName = $args[1];
-                if(!isset($this->config["fields"][$fieldName])){
-                    return "/this field doesn't exist!";
-                }
-                if($issuer->level->getName() != $this->mgConfig->getMainConfig()["hub"]["level"]){
-                    return "/you need to be in hub to join!";
-                }
-                if(MGmain::playerInField($issuer->username, $this->fields) != false){
-                    return "/you already in field!";
-                }
-                if(!isset($this->sessions[$fieldName])){ //start code
-                    $this->startField($fieldName);
-                    //$output .= "/starting field \"$fieldName\"\n";
-                }
-                $msg = $this->mgPlayer->joinField($this->sessions[$fieldName], $issuer, $this->config["fields"][$fieldName], $this->gameName);
-                $this->updateField($this->sessions[$fieldName]);
-                return $msg;
+                return $this->commandJoin($cmd, $args, $issuer);
             default:
                 if($this->api->ban->isOp($issuer->username)){
                     $output = $this->opCommand($cmd, $args, $issuer);
@@ -50,40 +30,71 @@ class MGcommands{
     }
     
     public function opCommand($cmd, $args, $issuer){
-        $subcmd = $args[0];
-        if(isset($args[1]) and $args[1] !== ""){
-            $fieldName = $args[1];
+        if(!isset($args[1]) and $args[1] == ""){
+            return "/$cmd ".$args[0]." <fieldName>";
         }
-        else{
-            return "/$cmd $subcmd <fieldName>";
-        }
-        
-        switch($subcmd){
+        switch($args[0]){
             case "setfield":
-                if(!isset($args[2]) or $args[2] == ""){
-                    $maxPlayers = 12;
-                }
-                else{
-                    $maxPlayers = $args[2];
-                }
-                $this->mgConfig->fieldIntoConfig($this->path, $fieldName, [
-                    "level" => $issuer->entity->level->getName(),
-                    "maxPlayers" => $maxPlayers
-                ]);
-                $this->setFields();
-                return "/field $fieldName created";
-                //todo delfield
+                return $this->commandSetField($cmd, $args, $issuer);
             case "setpos1":
             case "setpos2":
             case "setlobby":
-                $output = $this->mgConfig->posIntoConfig($issuer, $fieldName, substr($args[0], 3), $this->path);
-                if($output){
-                    $this->setFields();
-                    return "/".$args[0]." seted";
-                }
-                else{
-                    return $output;
-                }
+                return $this->commandSetPosition($cmd, $args, $issuer);
+            case "start":
+                return $this->commandStart($cmd, $args, $issuer);
         }
+    }
+    
+    public function commandWins($cmd, $args, $issuer){
+        return $this->mgConfig->getWins($issuer->username, $this->gameName)." wins";
+    }
+    
+    public function commandJoin($cmd, $args, $issuer){
+        if(!isset($args[1]) or $args[1] === ""){
+            return "/$cmd join <field>";
+        }
+        $fieldName = $args[1];
+        if(!isset($this->config["fields"][$fieldName])){
+            return "/this field doesn't exist!";
+        }
+        if($issuer->level->getName() != $this->mgConfig->getMainConfig()["hub"]["level"]){
+            return "/you need to be in hub to join!";
+        }
+        if(MGmain::playerInField($issuer->username, $this->fields) != false){
+            return "/you already in field!";
+        }
+        if(!isset($this->sessions[$fieldName])){ //start code
+            $this->startField($fieldName);
+            //$output .= "/starting field \"$fieldName\"\n";
+        }
+        $msg = $this->mgPlayer->joinField($this->sessions[$fieldName], $issuer, $this->config["fields"][$fieldName], $this->gameName);
+        $this->updateField($this->sessions[$fieldName]);
+        return $msg;
+    }
+    
+    public function commandSetField($cmd, $args, $issuer){
+        $maxPlayers = (isset($args[2]) && $args[2] !== "") ? $args[2] : 12;
+        $this->mgConfig->fieldIntoConfig($this->path, $args[1], [
+            "level" => $issuer->entity->level->getName(),
+            "maxPlayers" => $maxPlayers
+        ]);
+        $this->setFields();
+        return "/field ".$args[1]." created";
+        //todo delfield
+    }
+    
+    public function commandSetPosition($cmd, $args, $issuer){
+        $output = $this->mgConfig->posIntoConfig($issuer, $args[1], substr($args[0], 3), $this->path);
+        if($output){
+            $this->setFields();
+            return "/".$args[0]." seted";
+        }
+        else{
+            return $output;
+        }
+    }
+    
+    public function commandStart($cmd, $args, $issuer){
+        return "not implement";
     }
 }

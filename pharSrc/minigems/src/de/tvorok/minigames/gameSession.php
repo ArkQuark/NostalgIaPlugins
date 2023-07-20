@@ -79,26 +79,12 @@ class gameSession{
         $this->field["status"] = $status;
     }
     
-    public function getAfk(String $username){
-        return $this->field["afk"][$username];
-    }
-    
-    public function resetAfk(String $username){
-        $this->field["afk"][$username] = 0;
-    }
-    
     public function addPlayer(String $username){
         $this->field["players"][$username] = $username;
-        $this->field["afk"][$username] = 0;
-    }
-    
-    public function addAfk(String $username){
-        ++$this->field["afk"][$username];
     }
     
     public function removePlayer(String $username){
         unset($this->field["players"][$username]);
-        unset($this->field["afk"][$username]);
     }
     
     public function addBackup($block){
@@ -108,7 +94,6 @@ class gameSession{
     public function restoreData(){
         $this->field["status"] = false;
         $this->field["players"] = [];
-        $this->field["afk"] = [];
         $this->field["backup"] = [];
     }
     
