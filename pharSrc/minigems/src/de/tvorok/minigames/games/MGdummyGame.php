@@ -23,6 +23,11 @@ class MGdummyGame{
         $this->setFields();
     }
     
+    public function createConfig(){
+        $this->path = $this->mgConfig->createGameConfig($this->gameName);
+        $this->setFields();
+    }
+    
     public function setFields($data = []){
         $this->config = $this->mgConfig->getGameConfig($this->path);
         if(!isset($this->config["fields"])){
@@ -34,6 +39,7 @@ class MGdummyGame{
             $this->fields[$fieldName] = [
                 "players" => [],
                 "status" => false,
+                "backup" => [],
                 "name" => "$fieldName",
                 "level" => $this->config["fields"][$fieldName]["level"],
                 "maxPlayers" => $this->config["fields"][$fieldName]["maxPlayers"]
@@ -46,10 +52,7 @@ class MGdummyGame{
     }
     
     public function playerMove($data, $hData){
-        $downBlock = $data->level->getBlock(new Vector3($data->x, $data->y-1, $data->z));
-        if($downBlock->getID() === WOOL and $downBlock->getMetadata === 14){
-            $this->finish([$hData["user"], $hData["field"]]);
-        }
+        return;
     }
     
     public function playerBlockBreak($data, $hData){
@@ -228,21 +231,22 @@ class MGdummyGame{
         $config = $this->config["fields"][$fieldName];
         if(!isset($config)){
             console("this field doesn't exist!");
-            return;
+            return false;
         }
         if(!isset($this->config["fields"][$fieldName]["lobby"])){
             console("$fieldName lobby not found!");
-            return;
+            return false;
         }
         if(!isset($this->config["fields"][$fieldName]["pos1"]) and !isset($this->config["fields"][$fieldName]["pos2"])){
             console("$fieldName where pos1 or pos2!!!");
-            return;
+            return false;
         }
         $field = new gameSession($this->api, $this->fields[$fieldName]);
         $this->sessions[$fieldName] = $field;
         $field->setStatus("start");
         $this->updateField($field);
         $this->lobby($field);
+        return true;
     }
     
     public function lobby($field){
@@ -253,23 +257,22 @@ class MGdummyGame{
         $this->api->chat->broadcast(ucfirst($this->gameName)." \"$fieldName\" will start in ".MGmain::formatTime($this->config["lobbyTime"]));
         $field->timer($this->config["lobbyTime"], "The game starts in");
         $this->api->schedule($this->config["lobbyTime"] * 20, [$this, "game"], $field);
+        return true;
     }
     
     public function game($field){
         $players = $field->getPlayers();
-        if(count($players) < 2){
+        if(count($players) < 1){
             $this->mgPlayer->broadcastForWorld($field->getLevelName(), ucfirst($this->gameName)." cannot run, need 2 players!");
             $this->restoreField($field); //todo schedule
-            return;
+            return false;
         }
         else{
-            foreach($players as $username){
-                $this->api->player->get($username)->addItem(DIAMOND_SHOVEL, 0, 1);
-            }
             $this->mgPlayer->teleportAll("spawnpoint", $players, $this->config, $field->getName());
             $field->setStatus("game");
             $this->updateField($field);
             $this->api->chat->broadcast(ucfirst($this->gameName)." \"".$field->getName()."\" has been started!");
+            return true;
         }
     }
     
@@ -279,8 +282,9 @@ class MGdummyGame{
         $field->setStatus("finish");
         $this->mgConfig->addWin($winner, $this->gameName);
         $this->api->chat->broadcast("$winner win in ".$this->gameName." \"".$field->getName()."\"!");
-        $this->mgPlayer->confiscateItems($this->api->player->get($winner));
+        //$this->mgPlayer->confiscateItems($this->api->player->get($winner));
         $this->restoreField($field);
+        return true;
     }
     
     public function end($level){
@@ -288,6 +292,7 @@ class MGdummyGame{
         foreach($players as $player){
             $this->mgPlayer->tpToHub($player->username);
         }
+        return true;
     }
     
     public function restoreField($field){
@@ -304,6 +309,7 @@ class MGdummyGame{
         $this->updateField($field);
         unset($this->sessions[$field->getName()]);
         unset($field);
+        return true;
     }
     
     public function checkForWin($field){

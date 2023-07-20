@@ -112,7 +112,7 @@ class MGplayer{
         if($gameName == "spleef"){
             $pos = new Position($cfg["lobby"][0], $cfg["lobby"][1], $cfg["lobby"][2], $level);
         }
-        elseif($gameName == "tntrun"){
+        else{
             $xz = MGmain::randPos([[$cfg["pos1"][0], $cfg["pos2"][0]], [$cfg["pos1"][2], $cfg["pos2"][2]]]);
             $pos = new Position($xz[0]+.5, $cfg["pos1"][1]+.5, $xz[1]+.5, $level);
         }

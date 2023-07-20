@@ -17,7 +17,19 @@ class ObstacleRace extends MGdummyGame{
         $this->gameName = "ObstacleRace";
     }
     
-    public function loserProcess($data, $fieldName, $event){
+    public function playerDeath($data, $hData){
+        //tp
+        return false;
+    }
+    
+    public function playerMove($data, $hData){
+        $downBlock = $data->level->getBlock(new Vector3($data->x, $data->y-1, $data->z));
+        if($downBlock->getID() === WOOL and $downBlock->getMetadata() === 14){//finish line is red wool
+            $this->finish([$hData["user"], $hData["field"]]);
+        }
+    }
+    
+    public function loserProcess($data, $event, $fieldName){
         $field = $this->sessions[$fieldName];
         $user = $data->username;
         $field->removePlayer($user);

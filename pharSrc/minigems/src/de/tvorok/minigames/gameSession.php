@@ -68,7 +68,7 @@ class gameSession{
     }
     
     public function getBackup(){
-        return $this->field["backup"];
+        return $this->field["backup"] !== null ? $this->field["backup"] : [];
     }
     
     public function getMaxPlayers(){

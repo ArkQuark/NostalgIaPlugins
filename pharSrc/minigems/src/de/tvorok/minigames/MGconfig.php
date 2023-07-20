@@ -39,14 +39,12 @@ class MGconfig{
     public function createDataConfig(){
         $dataPath = $this->getDataPath();
         $dataConfig = new Config($dataPath, CONFIG_YAML, [
-            "spleefWins" => [
-                "username" => 0
+            "SpleefWins" => [
             ],
-            "raceWins" => [
-                "username" => 0
+            "TntRunWins" => [
             ],
-            "tntrunWins" => [
-                "username" => 0
+            "ObstacleRaceWins" => [
+                
             ]
         ]);
         return $dataConfig;
