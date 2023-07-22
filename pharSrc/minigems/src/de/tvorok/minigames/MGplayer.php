@@ -45,7 +45,7 @@ class MGplayer{
         return $pList;
     }
     
-    public function broadcast(String $msg){
+    public function broadcastForPlayers(String $msg){
         $players = $this->api->player->getAll();
         foreach($players as $player){
             $player->sendChat($msg);
@@ -61,16 +61,22 @@ class MGplayer{
         }
     }
     
+    public function broadcastForField($field, String $msg){
+        foreach($field->getPlayers() as $player){
+            $player->sendChat($msg);
+        }
+    }
+    
     public function teleportAll(String $point, Array $players, $config, String $fieldName){
         $cfg = $config["fields"][$fieldName];
         switch($point){
-            /*case "lobby":
-             $cfg = $cfg["lobby"];
-             $pos = new Position($cfg[0], $cfg[1], $cfg[2], $this->api->level->get($cfg[3]));
-             foreach($players as $player){
-             $player->teleport($pos);
-             }
-             break;*/
+            case "lobby"://fix?
+                $cfg = $cfg["lobby"];
+                $pos = new Position($cfg[0], $cfg[1], $cfg[2], $this->api->level->get($cfg[3]));
+                foreach($players as $player){
+                    $player->teleport($pos);
+                }
+                break;
             case "spawnpoint":
                 $level = $this->api->level->get($cfg["level"]);
                 foreach($players as $username){
@@ -80,6 +86,15 @@ class MGplayer{
                     $player->teleport($pos);
                 }
                 break;
+        }
+    }
+    
+    public function confiscateItem(Int $id, Player $player){
+        $air = BlockAPI::getItem(AIR, 0, 0);
+        foreach($player->inventory as $s){
+            if($player->inventory[$s]->getID() == $id){
+                $player->inventory[$s] = $air;
+            }
         }
     }
     

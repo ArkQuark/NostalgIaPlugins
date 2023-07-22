@@ -69,7 +69,7 @@ class MGdummyGame extends MGcommands{
         
         if($status == "game"){
             $this->loserProcess($data, "player.quit", $field->getName());
-            $this->mgPlayer->broadcastForWorld($field->getLevelName(), "$user quit.");
+            $this->mgPlayer->broadcastForField($field, "$user quit.");
         }
         if($status == "lobby" or $status == "start"){
             $field->removePlayer($user);
@@ -179,7 +179,8 @@ class MGdummyGame extends MGcommands{
         $field->setStatus("lobby");
         $this->updateField($field);
         $this->api->time->set(0, $this->api->level->get($field->getLevelName())); //fix
-        $this->api->chat->broadcast(ucfirst($this->gameName)." \"$fieldName\" will start in ".MGmain::formatTime($this->config["lobbyTime"]));
+        //tp to lobby???
+        $this->api->chat->broadcast($this->gameName." \"$fieldName\" will start in ".MGmain::formatTime($this->config["lobbyTime"]));
         $field->timer($this->config["lobbyTime"], "The game starts in");
         $this->api->schedule($this->config["lobbyTime"] * 20, [$this, "game"], $field);
         return true;
@@ -188,7 +189,7 @@ class MGdummyGame extends MGcommands{
     public function game($field){
         $players = $field->getPlayers();
         if(count($players) < 1){
-            $this->mgPlayer->broadcastForWorld($field->getLevelName(), ucfirst($this->gameName)." cannot run, need 2 players!");
+            $this->mgPlayer->broadcastForField($field, $this->gameName." cannot run, need 2 players!");
             $this->restoreField($field); //todo schedule
             return false;
         }
@@ -196,7 +197,7 @@ class MGdummyGame extends MGcommands{
             $this->mgPlayer->teleportAll("spawnpoint", $players, $this->config, $field->getName());
             $field->setStatus("game");
             $this->updateField($field);
-            $this->api->chat->broadcast(ucfirst($this->gameName)." \"".$field->getName()."\" has been started!");
+            $this->api->chat->broadcast($this->gameName." \"".$field->getName()."\" has been started!");
             return true;
         }
     }
@@ -212,16 +213,8 @@ class MGdummyGame extends MGcommands{
         return true;
     }
     
-    public function end($level){
-        $players = $this->api->player->getAll($this->api->level->get($level));
-        foreach($players as $player){
-            $this->mgPlayer->tpToHub($player->username);
-        }
-        return true;
-    }
-    
     public function restoreField($field){
-        $this->mgPlayer->broadcastForWorld($field->getLevelName(), "You will teleported to hub!");
+        $this->mgPlayer->broadcastForField($field, "You will teleported to hub!");
         $this->api->schedule(30, [$this, "end"], $field->getLevelName());
         //console("was break ".count($field->getBackup())." blocks");
         if(count($field->getBackup()) > 0){
@@ -237,11 +230,19 @@ class MGdummyGame extends MGcommands{
         return true;
     }
     
+    public function end($level){
+        $players = $this->api->player->getAll($this->api->level->get($level));
+        foreach($players as $player){
+            $this->mgPlayer->tpToHub($player->username);
+        }
+        return true;
+    }
+    
     public function checkForWin($field){
         $players = $field->getPlayers();
         $surv = count($players);
         if($surv > 1){
-            $this->mgPlayer->broadcastForWorld($field->getLevelName(), "$surv players remaining.");
+            $this->mgPlayer->broadcastForField($field, "$surv players remaining.");
         }
         elseif($surv = 1){
             $winner = array_shift($players);

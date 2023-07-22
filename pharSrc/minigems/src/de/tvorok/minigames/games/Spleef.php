@@ -35,7 +35,7 @@ class Spleef extends MGdummyGame{
     public function playerDeath($data, $hData){
         if($hData["status"] == "game"){
             $this->loserProcess($data, "player.death", $hData["field"]->getName());
-            $this->mgPlayer->broadcastForWorld($hData["field"]->getLevelName(), $hData["user"]." dead.");
+            $this->mgPlayer->broadcastForField($hData["field"], $hData["user"]." dead.");
         }
     }
     
@@ -51,7 +51,7 @@ class Spleef extends MGdummyGame{
     public function finish($array){
         $bool = parent::finish($array);
         if($bool){
-            $this->mgPlayer->confiscateItems($this->api->player->get($array[0]));
+            $this->mgPlayer->confiscateItem(DIAMOND_SHOVEL, $this->api->player->get($array[0]));
         }
     }
 }
