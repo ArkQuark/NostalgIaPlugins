@@ -12,10 +12,8 @@ use ServerAPI;
 use Vector3;
 
 class ObstacleRace extends MGdummyGame{
-    public function __construct(ServerAPI $api, $server = false){
-        parent::__construct($api);
-        $this->gameName = "ObstacleRace";
-        $this->createConfig();
+    public function __construct(ServerAPI $api, $gameName = "ObstacleRace"){
+        parent::__construct($api, $gameName);
     }
     
     public function playerDeath($data, $hData){

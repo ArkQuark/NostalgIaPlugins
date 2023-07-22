@@ -11,13 +11,15 @@ use de\tvorok\minigames\gameSession;
 use de\tvorok\minigames\MGcommands;
 
 class MGdummyGame extends MGcommands{
-    public function __construct(ServerAPI $api, $server = false){
+    public function __construct(ServerAPI $api, $gameName = "unknown"){
         $this->api = $api;
         $this->sessions = [];
-        $this->gameName = "unknown";
+        $this->gameName = $gameName;
         
         $this->mgConfig = new MGconfig($this->api);
         $this->mgPlayer = new MGplayer($this->api);
+        
+        $this->createConfig();
     }
     
     public function createConfig(){

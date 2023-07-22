@@ -12,10 +12,8 @@ use ServerAPI;
 use Vector3;
 
 class TNTRun extends MGdummyGame{
-    public function __construct(ServerAPI $api, $server = false){
-        parent::__construct($api);
-        $this->gameName = "TNTRun";
-        $this->createConfig();
+    public function __construct(ServerAPI $api, $gameName = "TNTRun"){
+        parent::__construct($api, $gameName);
     }
     
     public function playerDeath($data, $hData){
