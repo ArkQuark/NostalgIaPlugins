@@ -32,6 +32,7 @@ class MGmain implements Plugin{
         $this->api->addHandler("player.offline.get", [$this, "handler"]);
         $this->api->addHandler("player.move", [$this, "handler"]);
         $this->api->addHandler("entity.health.change", [$this, "handler"]);
+        $this->api->addHandler("console.command", [$this, "handler"]);
 
         $this->api->addHandler("hub.teleport", [$this, "handler"]);
 
@@ -52,13 +53,8 @@ class MGmain implements Plugin{
         if(!($issuer instanceof Player)){
             return "Please run this command in-game!";
         }
-        if(!isset($this->config["hub"])){
-            return "/hub not exists!";
-        }
-        $hub = $this->config["hub"];
-        $issuer->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
         $this->api->dhandle("hub.teleport", ["player" => $issuer]);
-        return "You've been teleported to hub!";
+        return;
     }
     
     public function commandSetHub($cmd, $args, $issuer, $alias){
@@ -111,6 +107,15 @@ class MGmain implements Plugin{
         if(!$this->config["pluginEnable"] or count($this->games) < 1){
             return;
         }
+      	if($event == "hub.teleport"){
+      		$player = $data["player"];
+      		if(!isset($this->config["hub"])){
+      			return "/hub not exists!";
+      		}
+      		$hub = $this->config["hub"];
+      		$issuer->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
+      		return "You've been teleported to hub!";
+      	}
         if($event == "player.join"){
             if(!isset($this->config["hub"])){
                 return;

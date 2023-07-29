@@ -67,26 +67,31 @@ class MGplayer{
         }
     }
     
-    public function teleportAll(String $point, Array $players, $config, String $fieldName){
-        $cfg = $config["fields"][$fieldName];
+    public function teleportTo(String $point, Player $player, $config, String, $fieldName){
+    	 $cfg = $config["fields"][$fieldName];
         switch($point){
             case "lobby"://fix?
                 $cfg = $cfg["lobby"];
                 $pos = new Position($cfg[0], $cfg[1], $cfg[2], $this->api->level->get($cfg[3]));
-                foreach($players as $player){
-                    $player->teleport($pos);
-                }
+                $player->teleport($pos);
                 break;
+            case "pos":
             case "spawnpoint":
                 $level = $this->api->level->get($cfg["level"]);
-                foreach($players as $username){
-                    $player = $this->api->player->get($username);
-                    $xz = MGmain::randPos([[$cfg["pos1"][0], $cfg["pos2"][0]], [$cfg["pos1"][2], $cfg["pos2"][2]]]);
-                    $pos = new Position($xz[0]+.5, $cfg["pos1"][1]+.5, $xz[1]+.5, $level);
-                    $player->teleport($pos);
-                }
+                $xz = MGmain::randPos([[$cfg["pos1"][0], $cfg["pos2"][0]], [$cfg["pos1"][2], $cfg["pos2"][2]]]);
+                $pos = new Position($xz[0]+.5, $cfg["pos1"][1]+.5, $xz[1]+.5, $level);
+                $player->teleport($pos);
                 break;
+            case "hub":
+            	$this->api->dhandle("hub.teleport", ["player" => $issuer]);
+            	break;
         }
+    }
+    
+    public function teleportAll(String $point, Array $players, $config, String $fieldName){
+       foreach($players as $player){
+       		$this->teleportTo($point, $player, $config, $fieldName);
+       }
     }
     
     public function confiscateItem(Int $id, Player $player){

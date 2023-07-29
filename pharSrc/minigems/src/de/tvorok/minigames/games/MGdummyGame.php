@@ -85,6 +85,11 @@ class MGdummyGame extends MGcommands{
         return false;
     }
     
+    public function consoleCommand($data, $hData, $cmd){
+    	if($data["cmd"] === hub) return true;
+    	return "/Cannot use command while in-game!";
+   	}
+    
     public function hubTeleport($data, $hData){
         $field = $hData["field"];
         $user = $hData["user"];
