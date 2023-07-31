@@ -13,14 +13,14 @@ class MGplayer{
         $this->api = $api;
     }
     
-    public function tpToHub($username){
+    /*public function tpToHub($username){
         $config = (new MGconfig($this->api))->getMainConfig();
         if(!isset($config["hub"])){
             return "/hub not exists!";
         }
         $hub = $config["hub"];
         $this->api->player->get($username)->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
-    }
+    }*/
     
     public function posCommand(Entity $entity){
         $x = round($entity->x, 2);
@@ -62,13 +62,22 @@ class MGplayer{
     }
     
     public function broadcastForField($field, String $msg){
-        foreach($field->getPlayers() as $player){
-            $player->sendChat($msg);
+        if(!is_array($field)){
+            foreach($field->getPlayers() as $username){
+                $this->api->player->get($username)->sendChat($msg);
+            }
+            return;
+        }
+        foreach($field as $username){
+            $this->api->player->get($username)->sendChat($msg);
         }
     }
     
-    public function teleportTo(String $point, Player $player, $config, String, $fieldName){
-    	 $cfg = $config["fields"][$fieldName];
+    public function teleportTo(String $point, $player, $config, String $fieldName){
+        if(is_string($player)){
+            $player = $this->api->player->get($player);
+        }
+        $cfg = $config["fields"][$fieldName];
         switch($point){
             case "lobby"://fix?
                 $cfg = $cfg["lobby"];
@@ -83,14 +92,14 @@ class MGplayer{
                 $player->teleport($pos);
                 break;
             case "hub":
-            	$this->api->dhandle("hub.teleport", ["player" => $issuer]);
+            	$this->api->dhandle("hub.teleport", ["player" => $player]);
             	break;
         }
     }
     
     public function teleportAll(String $point, Array $players, $config, String $fieldName){
-       foreach($players as $player){
-       		$this->teleportTo($point, $player, $config, $fieldName);
+       foreach($players as $username){
+           $this->teleportTo($point, $this->api->player->get($username), $config, $fieldName);
        }
     }
     

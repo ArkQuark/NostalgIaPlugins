@@ -63,8 +63,9 @@ class MGcommands{
         if(MGmain::playerInField($issuer->username, $this->fields) != false){
             return "/you already in field!";
         }
-        if(!isset($this->sessions[$fieldName])){ //start code
+        if(!isset($this->sessions[$fieldName])){//start code
             $this->startField($fieldName);
+            //need fix
             //$output .= "/starting field \"$fieldName\"\n";
         }
         $msg = $this->mgPlayer->joinField($this->sessions[$fieldName], $issuer, $this->config["fields"][$fieldName], $this->gameName);

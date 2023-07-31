@@ -36,7 +36,7 @@ class gameSession{
     }
     
     public function showTime($array){
-        (new MGplayer($this->api))->broadcastForField($this, $array[1]." ".MGmain::formatTime($array[0]));
+        (new MGplayer($this->api))->broadcastForField($this->getPlayers(), $array[1]." ".MGmain::formatTime($array[0]));
     }
     
     public function getMultiple($int, $mlt){

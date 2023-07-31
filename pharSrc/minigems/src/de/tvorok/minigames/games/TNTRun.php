@@ -2,12 +2,8 @@
 
 namespace de\tvorok\minigames\games;
 
-use de\tvorok\minigames\MGconfig;
-use de\tvorok\minigames\MGmain;
-use de\tvorok\minigames\MGplayer;
-use de\tvorok\minigames\gameSession;
+
 use AirBlock;
-use Player;
 use ServerAPI;
 use Vector3;
 

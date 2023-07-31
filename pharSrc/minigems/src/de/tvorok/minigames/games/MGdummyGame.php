@@ -75,6 +75,7 @@ class MGdummyGame extends MGcommands{
             $field->removePlayer($user);
             $this->updateField($field);
         }
+        return;
     }
     
     public function playerIntecart($data, $hData){
@@ -85,7 +86,7 @@ class MGdummyGame extends MGcommands{
         return false;
     }
     
-    public function consoleCommand($data, $hData, $cmd){
+    public function consoleCommand($data, $hData){
     	if($data["cmd"] === hub) return true;
     	return "/Cannot use command while in-game!";
    	}
@@ -101,16 +102,24 @@ class MGdummyGame extends MGcommands{
         if($status == "game"){
             $this->checkForWin($field);
         }
-        $data["player"]->sendChat("You left ".$this->gameName." game!");
+        /*$data["player"]->sendChat*/ return ("You left ".$this->gameName." game!");
     }
     
-    public function handler($data, $event){
-        if($this->fields == false){
-            return;
-        }
-        
+    public function entityHealthChange($data, $hData){
+        return;
+    }
+    
+    public function getUsername($data, $event){
         if($data instanceof Player){
             $user = $data->username;
+        }
+        if($event == "entity.health.change"){
+            $player = $data["entity"]->player;
+            if(!$player) return false;
+            $user = $player->username;
+        }
+        if($event == "console.command"){//fix
+            $user = $data["issuer"]->username;
         }
         if($event == "player.move"){
             $user = $data->player->username;
@@ -118,6 +127,18 @@ class MGdummyGame extends MGcommands{
         if(!isset($user)){
             $user = $data["player"]->username;
         }
+        return $user;
+    }
+    
+    public function handler($data, $event){
+        if($this->fields == false){
+            return;
+        }
+        
+        if(!$this->getUsername($data, $event)){
+            return;
+        }
+        $user = $this->getUsername($data, $event);
         
         $fieldName = MGmain::playerInField($user, $this->fields); //in field?
         if($fieldName == false){
@@ -130,26 +151,23 @@ class MGdummyGame extends MGcommands{
         
         switch($event){
             case "player.move":
-                $this->playerMove($data, $hData);
-                break;
+                return $this->playerMove($data, $hData);
             case "player.block.break":
-                $this->playerBlockBreak($data, $hData);
-                break;
+                return $this->playerBlockBreak($data, $hData);
             case "player.death":
-                $this->playerDeath($data, $hData);
-                break;
+                return $this->playerDeath($data, $hData);
             case "player.quit":
-                $this->playerQuit($data, $hData);
-                break;
+                return $this->playerQuit($data, $hData);
             case "player.interact":
-                $this->playerIntecart($data, $hData);
-                break;
+                return $this->playerIntecart($data, $hData);
             case "player.block.place":
-                $this->playerBlockPlace($data, $hData);
-                break;
+                return $this->playerBlockPlace($data, $hData);
             case "hub.teleport":
-                $this->hubTeleport($data, $hData);
-                break;
+                return $this->hubTeleport($data, $hData);
+            case "console.command":
+                return $this->hubTeleport($data, $hData);
+            case "entity.health.change":
+                return $this->entityHealthChange($data, $hData);
         }
     }
     
@@ -207,20 +225,18 @@ class MGdummyGame extends MGcommands{
         }
     }
     
-    public function finish($array){
-        $winner = $array[0];
-        $field = $array[1];
+    public function finish($field, $winner){
         $field->setStatus("finish");
         $this->mgConfig->addWin($winner, $this->gameName);
         $this->api->chat->broadcast("$winner win in ".$this->gameName." \"".$field->getName()."\"!");
         //$this->mgPlayer->confiscateItems($this->api->player->get($winner));
         $this->restoreField($field);
+        $this->mgPlayer->broadcastForField($field, "You will teleported to hub!");
+        $this->api->schedule(30, [$this, "end"], $field);
         return true;
     }
     
     public function restoreField($field){
-        $this->mgPlayer->broadcastForField($field, "You will teleported to hub!");
-        $this->api->schedule(30, [$this, "end"], $field->getLevelName());
         //console("was break ".count($field->getBackup())." blocks");
         if(count($field->getBackup()) > 0){
             $blocks = $field->getBackup();
@@ -235,12 +251,17 @@ class MGdummyGame extends MGcommands{
         return true;
     }
     
-    public function end($level){
-        $players = $this->api->player->getAll($this->api->level->get($level));
+    public function end($field){
+        $players = $field->getPlayers();
         foreach($players as $player){
-            $this->mgPlayer->tpToHub($player->username);
+            $this->mgPlayer->teleportTo("hub", $player);
         }
         return true;
+    }
+    
+    public function forceFinish($field){
+        $field->setStatus("finish");
+        $this->restoreField($field);
     }
     
     public function checkForWin($field){
@@ -249,9 +270,12 @@ class MGdummyGame extends MGcommands{
         if($surv > 1){
             $this->mgPlayer->broadcastForField($field, "$surv players remaining.");
         }
-        elseif($surv = 1){
+        elseif($surv == 1){
             $winner = array_shift($players);
-            $this->api->schedule(1, [$this, "finish"], [$winner, $field]);
+            $this->finish($field, $winner);
+        }
+        else{
+            $this->forceFinish($field);
         }
     }
     

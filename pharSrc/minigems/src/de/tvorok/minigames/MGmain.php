@@ -32,7 +32,7 @@ class MGmain implements Plugin{
         $this->api->addHandler("player.offline.get", [$this, "handler"]);
         $this->api->addHandler("player.move", [$this, "handler"]);
         $this->api->addHandler("entity.health.change", [$this, "handler"]);
-        $this->api->addHandler("console.command", [$this, "handler"]);
+        //$this->api->addHandler("console.command", [$this, "handler"]);
 
         $this->api->addHandler("hub.teleport", [$this, "handler"]);
 

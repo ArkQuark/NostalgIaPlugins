@@ -48,10 +48,10 @@ class Spleef extends MGdummyGame{
         }
     }
     
-    public function finish($array){
-        $bool = parent::finish($array);
+    public function finish($field, $winner){
+        $bool = parent::finish($field, $winner);
         if($bool){
-            $this->mgPlayer->confiscateItem(DIAMOND_SHOVEL, $this->api->player->get($array[0]));
+            $this->mgPlayer->confiscateItem(DIAMOND_SHOVEL, $this->api->player->get($winner));
         }
     }
 }
