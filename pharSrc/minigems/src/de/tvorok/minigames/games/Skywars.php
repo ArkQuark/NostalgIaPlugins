@@ -38,7 +38,7 @@ class Skywars extends MGdummyGame{
         return true;
     }
     
-    public function playerIntecart($data, $hData){
+    public function playerInteract($data, $hData){
         $status = $hData["status"];
         if($status === "game" or $status === "deathmatch"){
             return true;

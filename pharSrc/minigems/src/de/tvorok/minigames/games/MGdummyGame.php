@@ -78,7 +78,7 @@ class MGdummyGame extends MGcommands{
         return;
     }
     
-    public function playerIntecart($data, $hData){
+    public function playerInteract($data, $hData){
         return false;
     }
     
@@ -159,7 +159,7 @@ class MGdummyGame extends MGcommands{
             case "player.quit":
                 return $this->playerQuit($data, $hData);
             case "player.interact":
-                return $this->playerIntecart($data, $hData);
+                return $this->playerInteract($data, $hData);
             case "player.block.place":
                 return $this->playerBlockPlace($data, $hData);
             case "hub.teleport":
@@ -223,7 +223,7 @@ class MGdummyGame extends MGcommands{
     }
     
     public function game($field){
-        $this->mgPlayer->teleportAll("spawnpoint", $players, $this->config, $field->getName());
+        $this->mgPlayer->teleportAll("spawnpoint", $field->getPlayers(), $this->config, $field->getName());
         $field->setStatus("game");
         $this->updateField($field);
         $this->api->chat->broadcast($this->gameName." \"".$field->getName()."\" has been started!");
