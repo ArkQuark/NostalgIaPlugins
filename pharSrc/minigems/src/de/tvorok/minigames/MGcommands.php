@@ -25,6 +25,9 @@ class MGcommands{
                 if($this->api->ban->isOp($issuer->username)){
                     $output = $this->opCommand($cmd, $args, $issuer);
                 }
+                else{
+                    return "/unknown argument";
+                }
         }
         return $output;
     }
@@ -42,6 +45,8 @@ class MGcommands{
                 return $this->commandSetPosition($cmd, $args, $issuer);
             case "start":
                 return $this->commandStart($cmd, $args, $issuer);
+            default:
+                return "/unknown argument";
         }
     }
     

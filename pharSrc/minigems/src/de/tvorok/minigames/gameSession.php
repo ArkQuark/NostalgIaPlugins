@@ -31,7 +31,7 @@ class gameSession{
         }
         asort($counts);
         foreach($counts as $cnt){
-            $this->api->schedule(($sec - $cnt) * 20, [$this, "showTime"], [$cnt, $msg]);
+            $this->api->schedule(($sec - $cnt) * 20, [$this, "showTime"], [$cnt, trim($msg)]);
         }
     }
     

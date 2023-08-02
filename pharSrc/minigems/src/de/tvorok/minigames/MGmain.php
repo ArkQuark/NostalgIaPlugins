@@ -149,7 +149,7 @@ class MGmain implements Plugin{
     }
 
     public function __destruct(){
-        //wow this is needable
+        //onDisable = backup all fields
     }
 
     public static function formatTime(int $sec){

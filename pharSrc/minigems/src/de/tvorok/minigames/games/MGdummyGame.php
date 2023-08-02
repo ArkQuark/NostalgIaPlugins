@@ -205,24 +205,29 @@ class MGdummyGame extends MGcommands{
         //tp to lobby???
         $this->api->chat->broadcast($this->gameName." \"$fieldName\" will start in ".MGmain::formatTime($this->config["lobbyTime"]));
         $field->timer($this->config["lobbyTime"], "The game starts in");
-        $this->api->schedule($this->config["lobbyTime"] * 20, [$this, "game"], $field);
+        $this->api->schedule($this->config["lobbyTime"] * 20, [$this, "checkForStart"], $field);
         return true;
     }
     
-    public function game($field){
+    public function checkForStart($field){
         $players = $field->getPlayers();
         if(count($players) < 1){
             $this->mgPlayer->broadcastForField($field, $this->gameName." cannot run, need 2 players!");
-            $this->restoreField($field); //todo schedule
+            $this->restoreField($field); //todo schedule??
             return false;
         }
         else{
-            $this->mgPlayer->teleportAll("spawnpoint", $players, $this->config, $field->getName());
-            $field->setStatus("game");
-            $this->updateField($field);
-            $this->api->chat->broadcast($this->gameName." \"".$field->getName()."\" has been started!");
+            $this->game($field);
             return true;
         }
+    }
+    
+    public function game($field){
+        $this->mgPlayer->teleportAll("spawnpoint", $players, $this->config, $field->getName());
+        $field->setStatus("game");
+        $this->updateField($field);
+        $this->api->chat->broadcast($this->gameName." \"".$field->getName()."\" has been started!");
+        return true;
     }
     
     public function finish($field, $winner){
