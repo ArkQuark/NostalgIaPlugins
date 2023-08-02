@@ -113,8 +113,8 @@ class MGmain implements Plugin{
       			return "/hub not exists!";
       		}
       		$hub = $this->config["hub"];
-      		$issuer->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
-      		return "You've been teleported to hub!";
+      		$player->teleport(new Position($hub[0], $hub[1], $hub[2], $this->api->level->get($hub["level"])));
+      		return true;
       	}
         if($event == "player.join"){
             if(!isset($this->config["hub"])){
@@ -149,7 +149,9 @@ class MGmain implements Plugin{
     }
 
     public function __destruct(){
-        //onDisable = backup all fields
+        foreach($this->games as $game){
+            $game->onDisable();
+        }
     }
 
     public static function formatTime(int $sec){

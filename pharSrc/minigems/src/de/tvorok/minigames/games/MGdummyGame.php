@@ -235,9 +235,9 @@ class MGdummyGame extends MGcommands{
         $this->mgConfig->addWin($winner, $this->gameName);
         $this->api->chat->broadcast("$winner win in ".$this->gameName." \"".$field->getName()."\"!");
         //$this->mgPlayer->confiscateItems($this->api->player->get($winner));
-        $this->restoreField($field);
         $this->mgPlayer->broadcastForField($field, "You will teleported to hub!");
-        $this->api->schedule(30, [$this, "end"], $field);
+        $this->api->schedule(30, [$this, "end"], $field->getLevel());
+        $this->restoreField($field);
         return true;
     }
     
@@ -256,8 +256,8 @@ class MGdummyGame extends MGcommands{
         return true;
     }
     
-    public function end($field){
-        $players = $field->getPlayers();
+    public function end($level){
+        $players = $this->api->player->getAll($level);
         foreach($players as $player){
             $this->mgPlayer->teleportTo("hub", $player);
         }
@@ -295,6 +295,12 @@ class MGdummyGame extends MGcommands{
                 $this->updateField($field);
                 $this->checkForWin($field);
                 break;
+        }
+    }
+    
+    public function onDisable(){
+        foreach($this->sessions as $field){
+            $this->forceFinish($this->sessions[$field["name"]]);
         }
     }
 }
