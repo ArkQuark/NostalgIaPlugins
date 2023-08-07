@@ -51,6 +51,10 @@ class gameSession{
         return $return;
     }
     
+    public function getField(){
+        return $this->field;
+    }
+    
     public function getStatus(){
         return $this->field["status"];
     }
@@ -71,8 +75,20 @@ class gameSession{
         return $this->field["backup"] !== null ? $this->field["backup"] : [];
     }
     
-    public function getMaxPlayers(){
+    public function getMaxPlayers() : int{
         return $this->field["maxPlayers"];
+    }
+    
+    public function getMinPlayers() : int{
+        return $this->field["minPlayers"];
+    }
+    
+    public function getTeamed(){
+        return $this->field["teamed"];
+    }
+    
+    public function getTeams(){
+        return $this->field["teams"];
     }
     
     public function setStatus($status){
@@ -91,10 +107,27 @@ class gameSession{
         $this->field["backup"][] = $block;
     }
     
+    public function setTeamed(Bool $bool){
+        $this->field["teams"] = $bool;
+    }
+    
+    public function addInTeam($teamName, $player){
+        $this->field["teams"][$teamName] += [$player];
+    }
+    
+    public function removeFromTeam($teamName, $player){
+        unset($this->field["teams"][$teamName][$player]);
+    }
+    
+    public function removeTeam($teamName){
+        unset($this->field["teams"][$teamName]);
+    }
+    
     public function restoreData(){
         $this->field["status"] = false;
         $this->field["players"] = [];
         $this->field["backup"] = [];
+        $this->field["teams"] = [];
     }
     
     public function updateData(){

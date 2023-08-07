@@ -31,9 +31,15 @@ class MGconfig{
             ]
         ]); 
     }
+    
+    public function addToMainConfig(Array $array = ["SkywarsEnable" => true, "KingOfHillEnable" => true]){
+        $cfg = $this->api->plugin->readYAML($this->mainPath);
+        $cfg["MiniGames"] += $array;
+        $this->api->plugin->writeYAML($this->mainPath, $cfg);
+    }
 
     public function getMainConfig(){
-        return $this->api->plugin->readYAML(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", "main.yml"]))["MiniGames"];
+        return $this->api->plugin->readYAML($this->mainPath)["MiniGames"];
     }
 
     public function createDataConfig(){

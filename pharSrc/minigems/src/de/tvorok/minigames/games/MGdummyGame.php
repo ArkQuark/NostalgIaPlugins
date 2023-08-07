@@ -41,7 +41,10 @@ class MGdummyGame extends MGcommands{
                 "backup" => [],
                 "name" => "$fieldName",
                 "level" => $this->config["fields"][$fieldName]["level"],
-                "maxPlayers" => $this->config["fields"][$fieldName]["maxPlayers"]
+                "maxPlayers" => $this->config["fields"][$fieldName]["maxPlayers"],
+                "minPlayers" => 1,
+                "teamed" => false,
+                "teams" => [],
             ] + $data;
         }
     }
@@ -211,8 +214,9 @@ class MGdummyGame extends MGcommands{
     
     public function checkForStart($field){
         $players = $field->getPlayers();
-        if(count($players) < 1){
-            $this->mgPlayer->broadcastForField($field, $this->gameName." cannot run, need 2 players!");
+        $min = $field->getMinPlayers();
+        if(count($players) < $min){
+            $this->mgPlayer->broadcastForField($field, $this->gameName." cannot run, need $min players!");
             $this->restoreField($field); //todo schedule??
             return false;
         }
