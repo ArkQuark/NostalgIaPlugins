@@ -18,7 +18,7 @@ class Carpet implements Plugin{
 	}
 
 	public function init(){
-		$this->api->addHandler("player.block.touch", [$this, "eventHandle"], 1000);
+		$this->api->addHandler("player.block.touch", [$this, "eventHandle"]);
 	}
 
 	public function eventHandle($data, $event){
