@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=ColorCarpet
 description=Coloring wool and carpet with dye
-version=1.4.0
+version=1.4.1
 author=ArkQuark
 class=Carpet
 apiversion=11,12,12.1
@@ -28,29 +28,29 @@ class Carpet implements Plugin{
 		$target = $data["target"];
 		$targetID = $target->getID();
 		$targetMeta = $target->getMetadata();
-		
-		if(($targetID !== WOOL) or ($targetID !== CARPET)) return;
+		if(($targetID !== WOOL) && ($targetID !== CARPET)) return;
 		
 		$pos = new Vector3($target->x, $target->y, $target->z, $target->level);
 		
 		$itemHeld = $player->getSlot($player->slot);
 		$itemHeldID = $itemHeld->getID();
+		$itemHeldMeta = $itemHeld->getMetadata();
 		
 		if($itemHeldID == 351){//dye
 			if(($targetMeta ^ 0xf) !== $itemHeldMeta){
-				$block = BlockAPI::get($targetID, $targetMeta ^ 0xf);
-				$target->level->setBlock($pos, $block);
+				$block = BlockAPI::get($targetID, $itemHeldMeta ^ 0xf);
+				$target->level->setBlock($pos, $block, true, false, true);
 				if($playerGamemode === "survival"){
-					$player->removeItem($itemHeldID, $itemHeldMeta, 1, false);
+					$player->removeItem($itemHeldID, $itemHeldMeta, 1, true);
 				}
 			}
 		}
 		elseif($itemHeldID === COAL){
 			if($targetMeta !== 15){
 				$block = BlockAPI::get($targetID, 15);
-				$target->level->setBlock($pos, $block);
+				$target->level->setBlock($pos, $block, true, false, true);
 				if($playerGamemode === "survival"){
-					$player->removeItem($itemHeldID, $itemHeldMeta, 1, false);
+					$player->removeItem($itemHeldID, $itemHeldMeta, 1, true);
 				}
 			}
 		}
