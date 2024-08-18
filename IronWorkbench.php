@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=2.2.0
+version=2.2.1
 author=DartMiner43
 class=IWmain
 apiversion=11,12,12.1
@@ -37,7 +37,7 @@ class IWmain implements Plugin{
 		$pos = new Position($target->x, $target->y, $target->z, $target->level);
 		$dropPos = new Position($target->x+0.5, $target->y+1, $target->z+0.5, $target->level);
 				
-		if($player->getGamemode() !== "survival") return;
+		if($player->getGamemode() !== "survival" and $player->getGamemode !== "adventure") return;
 		if($targetID !== IRON_BLOCK) return;
 		if($itemheldCount === 0) return;
 				
@@ -76,6 +76,7 @@ class IWmain implements Plugin{
 	}
 
 	public function commandHandler($cmd, $params, $issuer, $alias){
+		//wip add pages and works with yml "info"
 		$output = "Crafts with IronWorkbench:\n";
 		$output .= "Flint -> Gunpowder\n";
 		$output .= "Jungle Wood -> 4 Jungle planks\n";
@@ -84,6 +85,23 @@ class IWmain implements Plugin{
 		$output .= "8 Saplings -> Grass block\n";
 		$output .= "Coal -> Inc sac";
 		return $output;
+	}
+	
+	public function createCraftsFile(){
+		//wip
+		//console(FORMAT_GREEN."Making yml file for IronWorkbench crafts".FORMAT_RESET);
+		//new Config($this->api->plugin->configPath($this)."\IronWorkbench\crafts.yml", CONFIG_YAML, [
+		//0 => 
+		//	"material" => 
+		//		"needle" => "name of item" string, "count" int,
+		//		"crafted" => "name of item" string, "count" int;
+		//	"info" => string, //uses for command
+		//	"needleIsBlock" = false/true
+		//]);
+	}
+	
+	public function parseCrafts(){
+		//wip
 	}
 
 	public function __destruct(){}

@@ -3,11 +3,11 @@
 /*
 __PocketMine Plugin__
 name=GrassPlant
-description=Replant grass using wheat seeds.
-version=1.4.1
+description=Replant grass using any seeds.
+version=1.4.2
 author=onlypuppy7
 class=Grass
-apiversion=12.1
+apiversion=11,12,12.1
 */
 
 class Grass implements Plugin{
@@ -17,27 +17,31 @@ class Grass implements Plugin{
 	}
 
 	public function init(){
-		$this->api->addHandler("player.block.touch", array($this, "eventHandle"), 5);
+		$this->api->addHandler("player.block.touch", [$this, "eventHandle"], 1000);
 	}
 
 	public function eventHandle($data, $event){
 		switch($event){
 			case "player.block.touch":
 				$player = $data["player"];
+				$pGamemode = $player->getGamemode();
+				
+				if($pGamemode !== "survival" and $pGamemode !== "creative") return; //player cannot interact in spectator and adventure
+				
 				$target = $data["target"];
 				$tile = $this->api->tile->get(new Position($target->x, $target->y, $target->z, $target->level));
 				$itemheld = $player->getSlot($player->slot);
 				$item = $itemheld->getID();
 
-				if(($target->getID() == 3) and (($item == 295) or ($item == 361) or ($item == 362) or ($item == 458))){
-					$block = BlockAPI::get(DIRT);
+				if(($target->getID() === DIRT) and ($item === SEEDS or $item === PUMPKIN_SEEDS or $item == MELON_SEEDS or $item == BEETROOT_SEEDS)){
+					$block = BlockAPI::get(GRASS);
 					$pos = new Vector3($target->x, $target->y, $target->z);
 					if($target->getSide(1)->isTransparent === false){
 						break;
 					}
 					else{
 						$target->level->setBlock($pos, $block);
-						if($player->getGamemode() == "survival"){
+						if($pGamemode == "survival"){
 							$player->removeItem($item, 0, 1);
 						}
 					}

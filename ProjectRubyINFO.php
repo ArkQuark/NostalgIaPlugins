@@ -2,10 +2,10 @@
   /*
 __PocketMine Plugin__
 name=ProjectRubyINFO
-version=0.4.0
+version=0.5.0
 author=ArkQuark
 class=ProjectRuby
-apiversion=12,12.1
+apiversion=12.1
 */
 
 class ProjectRuby implements Plugin{
@@ -17,36 +17,42 @@ class ProjectRuby implements Plugin{
 	}
 	
 	public function init(){
-		$this->api->event("player.join", array($this, "event"));
+		$this->api->event("player.join", [$this, "event"]);
 		
-		$this->lang = new Config($this->api->plugin->configPath($this)."lang.yml", CONFIG_YAML, array());
-		$this->bugs = new Config($this->api->plugin->configPath($this)."bugs.yml", CONFIG_YAML, array());
-		$this->api->schedule(5*60*20, array($this,"sayInfo"), array(), true);
+		$this->lang = new Config($this->api->plugin->configPath($this)."lang.yml", CONFIG_YAML, []);
+		$this->bugs = new Config($this->api->plugin->configPath($this)."bugs.yml", CONFIG_YAML, []);
+		$this->api->schedule(5*60*20/*change for test*/, [$this,"sayInfo"], [], true);
 		
-		$this->api->console->register("lang", "<ru|en>", array($this, "command"));
-		$this->api->console->register("bug", "<message>", array($this, "command"));
+		$this->api->console->register("lang", "<ru|en>", [$this, "command"]);
+		$this->api->console->register("bug", "<message>", [$this, "command"]);
 		$this->api->ban->cmdWhitelist("lang");
 		$this->api->ban->cmdWhitelist("bug");
 		
-		$this->langEN = new Config($this->api->plugin->configPath($this)."langEN.yml", CONFIG_YAML, array(
-			"Server working on NostalgiaCore ".MAJOR_VERSION,
-			"If you seen a bug just /bug",
-			"Server ip pocketsw.ddns.net:19132",
-			"Join to our discord server https://discord.gg/fzyBQCuwVj",
-			"Check your ingame time /mytime",
-			"Ingame time top: /mytime top",
-			"Player's ingame time: /mytime see <nickname>",
-		));
+		if(!file_exists($this->api->plugin->configPath($this)."mainConfig.yml")){
+			console(FORMAT_RED."Please configure config files!".FORMAT_RESET);
+		}
+	
+		$this->constantConfig = new Config($this->api->plugin->configPath($this)."mainConfig.yml", CONFIG_YAML, [
+			"defaultLanguage" => "en",
+			"serverip" => "0.0.0.0:19132",
+			"discordlink" => "null",
+			"ncVer" => MAJOR_VERSION,
+		]);
 		
-		$this->langRU = new Config($this->api->plugin->configPath($this)."langRU.yml", CONFIG_YAML, array(
-			"Сервер работает на NostalgiaCore ".MAJOR_VERSION,
+		
+		$this->langEN = new Config($this->api->plugin->configPath($this)."langEN.yml", CONFIG_YAML, [
+			"Server works on NostalgiaCore %ver",
+			"If you seen a bug just /bug",
+			"Server ip: %ip",
+			"We are in discord: %discordlink",
+		]);
+		
+		$this->langRU = new Config($this->api->plugin->configPath($this)."langRU.yml", CONFIG_YAML, [
+			"Сервер работает на NostalgiaCore %ver",
 			"Если вы заметили баг напишите /bug",
-			"Айпи сервера pocketsw.ddns.net:19132",
-			"Заходите на наш дискорд сервер https://discord.gg/fzyBQCuwVj",
-			"Проверьте сколько вы наиграли на сервере /mytime",
-			"Топ наигранного времени игроков: /mytime top",
-			"Просмотр наигранного времени игрока: /mytime see <nickname>",
-		));
+			"Айпи сервера: %ip",
+			"Наш дискорд сервер: %discordlink",
+		]);
 	}
 	
 	
@@ -57,8 +63,8 @@ class ProjectRuby implements Plugin{
 				$username = $data->username;
 				if(!isset($lang[$username])){
 					$this->api->chat->broadcast("$username joined first time!");
-					$lang[$username] = 'en';
-					$data->sendChat($this->prefix.'You can change language for info messages.\nJust use /lang <en|ru>');
+					$lang[$username] = $this->constantConfig["defaultLanguage"];
+					$data->sendChat($this->parseMessage("You can change language for info messages.\nJust use /lang <en|ru>"));
 					$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."lang.yml", $lang);
 				}
 				break;
@@ -98,7 +104,7 @@ class ProjectRuby implements Plugin{
 				}
 				$message = join(" ", $args);
 				$cfg = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "bugs.yml");
-				array_push($cfg, array($issuer->username => $message));
+				array_push($cfg, [$issuer->username => $message]);
 				$this->api->plugin->writeYAML($this->api->plugin->configPath($this)."bugs.yml", $cfg);
 				if($pLang == 'en') $output .= "[/$cmd] Your message was saved! Thanks";
 				elseif($pLang == 'ru') $output .= "[/$cmd] Ваше сообщение было сохранено! Спасибо";
@@ -118,12 +124,12 @@ class ProjectRuby implements Plugin{
 				switch($playerLang){
 					case 'ru':
 						if($randmsg === false) $randmsg = mt_rand(0, count($this->langRU)-1);
-						$player->sendChat($this->prefix.$this->langRU[$randmsg]);
+						$player->sendChat($this->parseMessage($this->langRU[$randmsg]));
 						break;
 					case 'en':
 					default:
 						if($randmsg === false) $randmsg = mt_rand(0, count($this->langEN)-1);
-						$player->sendChat($this->prefix.$this->langEN[$randmsg]);
+						$player->sendChat($this->parseMessage($this->langEN[$randmsg]));
 						break;
 				}
 			}
@@ -132,7 +138,18 @@ class ProjectRuby implements Plugin{
 	
 	public function getPlayerLang($username){
 		$lang = $this->api->plugin->readYAML($this->api->plugin->configPath($this). "lang.yml");
-		return $lang[$username];
+		return $lang[$username] ?? $this->constantConfig["defaultLanguage"];
+	}
+	
+	public function parseMessage($message){
+		$parsed = $this->prefix;
+		
+		$patterns = ["/%ver/", "/%ip/", "/%discordlink/"];
+		$replacements = [MAJOR_VERSION, $this->constantConfig["serverip"], $this->constantConfig["discordlink"]];
+		
+		$parsed .= preg_replace($patterns, $replacements, $message);
+		
+		return $parsed;
 	}
 	
 	public function __destruct(){
