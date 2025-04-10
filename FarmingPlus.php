@@ -3,10 +3,10 @@
 __PocketMine Plugin__
 name=FarmingPlus
 description=Useful plugin for Farming using Hoe
-version=1.2
+version=1.3
 author=ArkQuark
 class=FarmingPlus
-apiversion=12,12.1
+apiversion=12.1
 */
 
 class FarmingPlus implements Plugin{
@@ -40,6 +40,7 @@ class FarmingPlus implements Plugin{
 				switch($targetID){
 					case 59: //wheat
 						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new WheatBlock, true, false, true);
+						$this->api->block->nextRandomUpdate($pos);
 						
 						$item = $this->api->block->fromString("WHEAT_SEEDS");
 						for($i = mt_rand(0, 3); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
@@ -49,6 +50,7 @@ class FarmingPlus implements Plugin{
 						break;
 					case 244: //beetroot
 						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new BeetrootBlock, true, false, true);
+						$this->api->block->nextRandomUpdate($pos);
 						
 						$item = $this->api->block->fromString("BEETROOT_SEEDS");
 						for($i = mt_rand(0, 3); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
@@ -58,12 +60,14 @@ class FarmingPlus implements Plugin{
 						break;
 					case 141: //carrot
 						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new CarrotBlock, true, false, true);
+						$this->api->block->nextRandomUpdate($pos);
 						
 						$item = $this->api->block->fromString("CARROT");
 						for($i = mt_rand(0, 2); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
 						break;
 					case 142: //potato
 						$target->level->setBlock(new Vector3($target->x, $target->y, $target->z), new PotatoBlock, true, false, true);
+						$this->api->block->nextRandomUpdate($pos);
 						
 						$item = $this->api->block->fromString("POTATO");
 						for($i = mt_rand(0, 2); $i > 0; $i--) $this->api->entity->drop($dropPos, $item);
