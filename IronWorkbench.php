@@ -3,21 +3,24 @@
 /*
 __PocketMine Plugin__
 name=IronWorkbench
-description=NEW Crafting system by using iron block!
-version=2.3
-author=DartMiner43
+description=Custom Crafting system using an Iron Block!
+version=3.0
+author=ArkQuark
 class=IWmain
 apiversion=12.2
 */
 
 class IWmain implements Plugin{
-	//Special thx to SkilasticYT
+	//Special thx to SkilasticYT and DartMiner43
 
 	public function __construct(ServerAPI $api, $server = false){
 		$this->api = $api;
 	}
 
 	public function init(){
+		$this->createConfig();
+		$this->parseCrafts();
+
 		$this->api->addHandler("player.block.touch", [$this, "eventHandler"]);
 		$this->api->console->register("crafts", "", [$this, "commandHandler"]);
 		$this->api->ban->cmdWhitelist("crafts");
@@ -28,8 +31,9 @@ class IWmain implements Plugin{
 		$player = $data["player"];
 		$target = $data["target"];
 		$targetID = $target->getID();
-
-if($targetID !== IRON_BLOCK) return;
+		
+		if($targetID !== IRON_BLOCK) return;
+		if($player->getGamemode() !== "survival" and $player->getGamemode() !== "adventure") return;
 				
 		$itemheld = $player->getSlot($player->slot);
 		$itemheldID = $itemheld->getID();
@@ -39,71 +43,83 @@ if($targetID !== IRON_BLOCK) return;
 		$pos = new Position($target->x, $target->y, $target->z, $target->level);
 		$dropPos = new Position($target->x+0.5, $target->y+1, $target->z+0.5, $target->level);
 				
-		if($player->getGamemode() !== "survival" and $player->getGamemode !== "adventure") return;
-		if($itemheldCount === 0) return;
+		if($itemheldID === AIR) return; 
 				
-		if($itemheldID === FLINT){//Flint -> Gunpowder
-			$player->removeItem(FLINT, 0, 1, false);
-			$item = BlockAPI::getItem(GUNPOWDER, 0, 1);
-			$this->api->entity->drop($dropPos, $item);
-		}
-		elseif($itemheldID === TRUNK and $itemheldMeta === 3){//Jungle wood -> 4 Jungle planks
-			$player->removeItem(TRUNK, 3, 1, false);
-			$item = BlockAPI::getItem(PLANKS, 3, 4);
-			$this->api->entity->drop($dropPos, $item, 3);
-			if($data['type'] === 'place') return false;
-		}
-		elseif($itemheldID === BONE){//Bone -> Quartz
-			$player->removeItem(Bone, 0, 1, false);
-			$item = BlockAPI::getItem(Quartz, 0, 1);
-			$this->api->entity->drop($dropPos, $item);
-		}
-		elseif($itemheldID === TALL_GRASS){ //Grass -> Dead bush
-			$player->removeItem(TALL_GRASS, $itemheldMeta, 1, false);
-			$item = BlockAPI::getItem(DEAD_BUSH, 0, 1);
-			$this->api->entity->drop($dropPos, $item);
-		}
-		elseif($itemheldID === SAPLING and $itemheldCount >== 8){//8 Saplings -> Grass block
-			$player->removeItem(SAPLING, $itemheldMeta, 8, false);
-			$item = BlockAPI::getItem(GRASS, 0, 1);
-			$this->api->entity->drop($dropPos, $item);
-			if($data['type'] === 'place') return false;
-		}
-		elseif($itemheldID === COAL){//Coal -> Inc sac
-			$player->removeItem(COAL, $itemheldMeta, 1, false);
-			$item = BlockAPI::getItem(DYE, 0, 1);
-			$this->api->entity->drop($dropPos, $item);
-		}
+		foreach($this->crafts as $id => $array){
+			$meta = $array["meta"];
+			$count = $array["count"];
+			if($itemheldID === $id and $itemheldMeta === $meta and $itemheldCount >= $count){
+				$player->removeItem($id, $meta, $array["count"]);
+				$item = BlockAPI::getItem($array["result"]["item"], $array["result"]["meta"], $array["result"]["count"]);
+				$this->api->entity->drop($dropPos, $item);
+				if($id < 256){
+					return false;
+				}
+			}
+		}	
 	}
 
 	public function commandHandler($cmd, $params, $issuer, $alias){
-		//wip add pages and works with yml "info"
-		$output = "Crafts with IronWorkbench:\n";
-		$output .= "Flint -> Gunpowder\n";
-		$output .= "Jungle Wood -> 4 Jungle planks\n";
-		$output .= "Bone -> Quartz\n";
-		$output .= "Tall Grass/Fern -> Dead bush\n";
-		$output .= "8 Saplings -> Grass block\n";
-		$output .= "Coal -> Inc sac";
+		$output = "";
+		foreach($this->crafts as $id => $array){
+			$itemName = BlockAPI::getItem($id, $array['meta'], $array['count'])->name;
+			$result = $array["result"];
+			$resultItemName = BlockAPI::getItem($result["item"], $result["meta"], $result['count'])->name;
+			$output .= $array["count"] ." $itemName -> ". $result["count"] ." $resultItemName\n";
+			//todo craft lists
+		}
 		return $output;
 	}
 	
-	public function createCraftsFile(){
-		//wip soon
+	public function createConfig(){
+		$path = $this->api->plugin->configPath($this);
 		//console(FORMAT_GREEN."Making yml file for IronWorkbench crafts".FORMAT_RESET);
-		//new Config($this->api->plugin->configPath($this)."\IronWorkbench\crafts.yml", CONFIG_YAML, [
-		//0 => 
-		//	"material" => 
-		//		"needle" => "name of item" string, "count" int,
-		//		"crafted" => "name of item" string, "count" int;
-		//	"info" => string, //uses for command
-		//	"needleIsBlock" = false/true
-		//]);
+		//todo crafts for snowblocks, irondoor, clay
+		new Config($path."crafts.yml", CONFIG_YAML, [
+			"trunk" => [
+				"meta" => 3,
+				"count" => 1,
+				"result" => [
+					"item" => "planks",
+					"meta" => 3,
+					"count" => 4
+				]
+			],
+			"feather" => [
+				"meta" => 0,
+				"count" => 1,
+				"result" => [
+					"item" => "quartz",
+					"meta" => 0,
+					"count" => 1
+				]
+			],
+			"coal" => [
+				"meta" => 0,
+				"count" => 1,
+				"result" => [
+					"item" => "dye",
+					"meta" => 0,
+					"count" => 1
+				]
+			]
+		]);
 	}
 	
 	public function parseCrafts(){
-		//wip
+		$yaml = $this->api->plugin->readYAML($this->api->plugin->configPath($this)."crafts.yml");
+		$this->crafts = [];
+		foreach($yaml as $id => $array){
+			$itemID = constant(strtoupper($id));
+			$this->crafts[$itemID] = [
+				"meta" => $array["meta"],
+				"count" => $array["count"],
+				"result" => [
+					"item" => constant(strtoupper($array["result"]["item"])),
+					"meta" => $array["result"]["meta"],
+					"count" => $array["result"]["count"]
+				]
+			];
+		}
 	}
-
-	public function __destruct(){}
 }
