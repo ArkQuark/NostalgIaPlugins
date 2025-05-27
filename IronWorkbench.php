@@ -4,10 +4,10 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=NEW Crafting system by using iron block!
-version=2.2.1
+version=2.3
 author=DartMiner43
 class=IWmain
-apiversion=11,12,12.1
+apiversion=12.2
 */
 
 class IWmain implements Plugin{
@@ -28,6 +28,8 @@ class IWmain implements Plugin{
 		$player = $data["player"];
 		$target = $data["target"];
 		$targetID = $target->getID();
+
+if($targetID !== IRON_BLOCK) return;
 				
 		$itemheld = $player->getSlot($player->slot);
 		$itemheldID = $itemheld->getID();
@@ -38,7 +40,6 @@ class IWmain implements Plugin{
 		$dropPos = new Position($target->x+0.5, $target->y+1, $target->z+0.5, $target->level);
 				
 		if($player->getGamemode() !== "survival" and $player->getGamemode !== "adventure") return;
-		if($targetID !== IRON_BLOCK) return;
 		if($itemheldCount === 0) return;
 				
 		if($itemheldID === FLINT){//Flint -> Gunpowder
@@ -52,9 +53,9 @@ class IWmain implements Plugin{
 			$this->api->entity->drop($dropPos, $item, 3);
 			if($data['type'] === 'place') return false;
 		}
-		elseif($itemheldID === QUARTZ){//Quartz -> Bone
-			$player->removeItem(QUARTZ, 0, 1, false);
-			$item = BlockAPI::getItem(BONE, 0, 1);
+		elseif($itemheldID === BONE){//Bone -> Quartz
+			$player->removeItem(Bone, 0, 1, false);
+			$item = BlockAPI::getItem(Quartz, 0, 1);
 			$this->api->entity->drop($dropPos, $item);
 		}
 		elseif($itemheldID === TALL_GRASS){ //Grass -> Dead bush
@@ -63,7 +64,7 @@ class IWmain implements Plugin{
 			$this->api->entity->drop($dropPos, $item);
 		}
 		elseif($itemheldID === SAPLING and $itemheldCount >== 8){//8 Saplings -> Grass block
-			$player->removeItem(SAPLING, $itemheldMeta, 1, false);
+			$player->removeItem(SAPLING, $itemheldMeta, 8, false);
 			$item = BlockAPI::getItem(GRASS, 0, 1);
 			$this->api->entity->drop($dropPos, $item);
 			if($data['type'] === 'place') return false;
@@ -80,7 +81,7 @@ class IWmain implements Plugin{
 		$output = "Crafts with IronWorkbench:\n";
 		$output .= "Flint -> Gunpowder\n";
 		$output .= "Jungle Wood -> 4 Jungle planks\n";
-		$output .= "Quartz -> Bone\n";
+		$output .= "Bone -> Quartz\n";
 		$output .= "Tall Grass/Fern -> Dead bush\n";
 		$output .= "8 Saplings -> Grass block\n";
 		$output .= "Coal -> Inc sac";
@@ -88,7 +89,7 @@ class IWmain implements Plugin{
 	}
 	
 	public function createCraftsFile(){
-		//wip
+		//wip soon
 		//console(FORMAT_GREEN."Making yml file for IronWorkbench crafts".FORMAT_RESET);
 		//new Config($this->api->plugin->configPath($this)."\IronWorkbench\crafts.yml", CONFIG_YAML, [
 		//0 => 
