@@ -17,18 +17,15 @@ class NPCEntity extends Zombie
         //self::$despawnMobs = false;
         parent::__construct($level, $eid, $class, MOB_ZOMBIE, $data);
         //self::$despawnMobs = $weirdcode1;
-	//$this->ai = new \EntityAI($this);
+		$this->ai = new \EntityAI($this);
+		$this->ai->addTask(new TaskLookAtPlayer(16));
         $this->setName($data["command"]);
         $this->yaw = $this->pitch = 0;
     }
 	
-	public function update(){
-		$this->server->api->schedule(10, [$this, "looking"], []);
-		//$magikClass = new ReflectionClass("Player");
-		//$this->magikProperty = $magikClass->getProperty("username");
-		//$this->magikProperty->setAccessible(true);
-		//$this->magikProperty->setValue($this, mt_rand(0, 1000));//(mt_rand(0, 1) == 1) ? "RED_".$issuer->username : "BLUE_".$issuer->username);	
-		parent::update();
+	public function update($now){
+		$this->server->api->schedule(10, [$this, "looking"], []);	
+		parent::update($now);
 }
 
 	public function looking(){
@@ -98,16 +95,7 @@ class NPCEntity extends Zombie
 		
 		$pk = new AddPlayerPacket();
 		$pk->clientID = 0;
-		$pk->username = $this->getName();		//"\n\nPos:\nX: {$this->x}\nY: {$this->y}\nZ: {$this->z}\n\n\n\n\n\n\n\n\n\n\n\n\n";
-		/*"\n\n\n\n
-   ____            _        _   __  __ _                  __  __ ____  
-  |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \ \n
-  | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |\n
-  |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/ \n
-  |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_| \n
-		";*/
-		
-		
+		$pk->username = $this->getName();
 		$pk->eid = $this->eid;
 		$pk->x = $this->x;
 		$pk->y = $this->y;

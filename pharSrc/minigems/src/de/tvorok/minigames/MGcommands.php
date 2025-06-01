@@ -4,7 +4,7 @@ namespace de\tvorok\minigames;
 
 use Player;
 
-class MGcommands{
+class MGcommands{	
     public function command($cmd, $args, $issuer, $alias){
         if(!($issuer instanceof Player)){
             return "Please run command in game.";
@@ -26,14 +26,14 @@ class MGcommands{
                     $output = $this->opCommand($cmd, $args, $issuer);
                 }
                 else{
-                    return "/unknown argument";
+                    return "/Unknown argument";
                 }
         }
         return $output;
     }
     
     public function opCommand($cmd, $args, $issuer){
-        if(!isset($args[1]) and $args[1] == ""){
+        if(array_key_exists(1, $args) and $args[1] == ""){
             return "/$cmd ".$args[0]." <fieldName>";
         }
         switch($args[0]){
@@ -46,7 +46,7 @@ class MGcommands{
             case "start":
                 return $this->commandStart($cmd, $args, $issuer);
             default:
-                return "/unknown argument";
+                return "/Unknown argument";
         }
     }
     
@@ -60,18 +60,18 @@ class MGcommands{
         }
         $fieldName = $args[1];
         if(!isset($this->config["fields"][$fieldName])){
-            return "/this field doesn't exist!";
+            return "/This field doesn't exist!";
         }
         if($issuer->level->getName() != $this->mgConfig->getMainConfig()["hub"]["level"]){
-            return "/you need to be in hub to join!";
+            return "/You need to be in hub to join!";
         }
         if(MGmain::playerInField($issuer->username, $this->fields) != false){
-            return "/you already in field!";
+            return "/You already in field!";
         }
         if(!isset($this->sessions[$fieldName])){//start code
             $this->startField($fieldName);
             //need fix
-            //$output .= "/starting field \"$fieldName\"\n";
+            //$output .= "/Starting field \"$fieldName\"\n";
         }
         $msg = $this->mgPlayer->joinField($this->sessions[$fieldName], $issuer, $this->config["fields"][$fieldName], $this->gameName);
         $this->updateField($this->sessions[$fieldName]);

@@ -1,7 +1,7 @@
 <?php
 namespace net\skidcode\gh\npcs\api;
 
-use net\skidcode\gh\npcs\NPCCommands;
+use net\skidcode\gh\npcs\command\AddNpcCommand;
 
 class ApiNPC
 {

@@ -9,13 +9,13 @@ use ServerAPI;
 class MGconfig{
     public function __construct(ServerAPI $api, $server = false){
         $this->api = $api;
+		$this->mainPath = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", "main.yml"]);
     }
 
     public function createConfig(){
         if(!file_exists(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", ""]))){
 			mkdir(join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", ""]), 0777);
 		}
-        $this->mainPath = join(DIRECTORY_SEPARATOR, [DATA_PATH."plugins", "Minigems", "main.yml"]);
         $this->configFile = new Config($this->mainPath, CONFIG_YAML, [
             "MiniGames" => [
                 "pluginEnable" => true,
