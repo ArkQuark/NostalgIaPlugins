@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=Custom Crafting system using an Iron Block!
-version=3.1
+version=3.1.1
 author=ArkQuark
 class=IWmain
 apiversion=12.2
@@ -51,7 +51,9 @@ class IWmain implements Plugin{
                 $pkk->meta = $idmeta[1];
                 $player->dataPacket($pkk);
             }
-        }
+        //}elseif($pk->pid() === ProtocolInfo:: && isset($this->playerTiles[$player->iusername])){
+
+        //}
     }
 
     public function containerSlotHandler($data){
@@ -139,6 +141,7 @@ class IWmain implements Plugin{
     }
 
     public function touchHandler($data){
+        if($data["type"] === "break") return;
         $player = $data["player"];
         $target = $data["target"];
         $targetID = $target->getID();
