@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=Custom Crafting system using an Iron Block!
-version=3.1.1
+version=3.1.2
 author=ArkQuark
 class=IWmain
 apiversion=12.2
@@ -24,6 +24,7 @@ class IWmain implements Plugin{
 
         $this->api->addHandler("player.block.touch", [$this, "touchHandler"]);
         $this->api->addHandler("player.container.slot", [$this, "containerSlotHandler"]);
+        //$this->api->addHandler("tile.update", [$this, "tileUpdateHandler"]);
         DataPacketReceiveEvent::register([$this, "packetListener"], EventPriority::NORMAL);
 
         $this->api->console->register("crafts", "", [$this, "commandHandler"]);
@@ -37,8 +38,6 @@ class IWmain implements Plugin{
             unset($this->playerTiles[$player->iusername]);
             if(!is_array($player->windows[$pk->windowid]) && $player->windows[$pk->windowid]->class === TILE_CHEST){
                 $tile = $player->windows[$pk->windowid];
-                //console(floor($player->entity->x).", ".floor($player->entity->y).", ".floor($player->entity->z)."\n");//needfix
-                //console($tile->x.", ".$tile->y.", ".$tile->z);
                 if(new Vector3(floor($player->entity->x), floor($player->entity->y), floor($player->entity->z)) == new Vector3($tile->x, $tile->y, $tile->z)){
                     $player->teleport(new Vector3($player->entity->x, $player->entity->y + 0.1, $player->entity->z));
                 }
@@ -51,9 +50,7 @@ class IWmain implements Plugin{
                 $pkk->meta = $idmeta[1];
                 $player->dataPacket($pkk);
             }
-        //}elseif($pk->pid() === ProtocolInfo:: && isset($this->playerTiles[$player->iusername])){
-
-        //}
+        }
     }
 
     public function containerSlotHandler($data){
@@ -65,6 +62,11 @@ class IWmain implements Plugin{
         $slotCount = $slotData->count;
 
         if(isset($this->playerTiles[$player->iusername])){
+            if($slotID === INVISIBLE_BEDROCK){
+                $this->api->schedule(2, [$player, "sendInventory"], []);
+                return false;
+            }
+
             $inventory = [];
             for($i = 0; $i < 36; $i++){
                 $slot = $player->getSlot($i);
@@ -174,13 +176,14 @@ class IWmain implements Plugin{
 				break;
 			}
 		}
+
 		$this->playerTiles[$player->iusername] = ["tile" => $tile, "windowId" => $windowId];
         return false;
     }
 
     public function commandHandler($cmd, $params, $issuer, $alias){
         $output = "";
-        //todo lists for crafts or fake double chest
+        //todo lists for crafts and fake double chest
         //console(var_dump($this->crafts));
         foreach($this->crafts as $resultIDM => $array){
             [$id, $meta] = explode(":", $resultIDM);
@@ -277,6 +280,14 @@ class IWmain implements Plugin{
 
                 $this->crafts["$resultID:$resultMeta"]["ingridients"][] = ["id" => $id, "meta" => $meta, "count" => $cnt];
             }
+        }
+        while($slot < 36){
+            $this->tileItems[] =[
+            "Count" => 1,
+            "Slot" => $slot++,
+            "id" => INVISIBLE_BEDROCK,
+            "Damage" => 0
+            ];
         }
     }
 }
