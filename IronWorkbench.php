@@ -4,7 +4,7 @@
 __PocketMine Plugin__
 name=IronWorkbench
 description=Custom Crafting system using an Iron Block!
-version=3.1.2
+version=3.1.3
 author=ArkQuark
 class=IWmain
 apiversion=12.2
@@ -24,7 +24,6 @@ class IWmain implements Plugin{
 
         $this->api->addHandler("player.block.touch", [$this, "touchHandler"]);
         $this->api->addHandler("player.container.slot", [$this, "containerSlotHandler"]);
-        //$this->api->addHandler("tile.update", [$this, "tileUpdateHandler"]);
         DataPacketReceiveEvent::register([$this, "packetListener"], EventPriority::NORMAL);
 
         $this->api->console->register("crafts", "", [$this, "commandHandler"]);
@@ -48,7 +47,7 @@ class IWmain implements Plugin{
                 $pkk->z = (int)$tile->z;
                 $pkk->block = $idmeta[0];
                 $pkk->meta = $idmeta[1];
-                $player->dataPacket($pkk);
+                $player->blockQueueDataPacket($pkk);
             }
         }
     }
@@ -158,7 +157,7 @@ class IWmain implements Plugin{
         $pk->z = $target->z;
         $pk->block = CHEST;
         $pk->meta = 0;
-        $player->dataPacket($pk);
+        $player->blockQueueDataPacket($pk);
 
         $tile = new Tile($player->level, PHP_INT_MAX, TILE_CHEST, $pk->x, $pk->y, $pk->z, array(
             "Items" => $this->tileItems,
